@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'xq/event'
 
 module Xq

@@ -1,6 +1,6 @@
 module Xq
   class Event
-    attr_reader :start, :duration, :value
+    attr_reader :start, :value
 
     def initialize(value, start=0, duration=nil)
       @value = value
