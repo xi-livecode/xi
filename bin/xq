@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "xq"
+require "xq/repl"
+
+include Xq
+
+REPL.start
