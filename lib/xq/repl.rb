@@ -1,5 +1,6 @@
 require "xq/error_log"
 require "pry"
+require 'pry-doc'
 
 module Xq
   module REPL
