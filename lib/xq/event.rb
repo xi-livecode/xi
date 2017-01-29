@@ -20,12 +20,16 @@ module Xq
       @duration.nil?
     end
 
+    def p(dur=nil)
+      [@value].p(dur)
+    end
+
     def inspect
       "E[#{@value.inspect},#{@start}#{",#{@duration}" if @duration}]"
     end
 
-    def p(dur=nil)
-      [@value].p(dur)
+    def to_s
+      inspect
     end
   end
 end

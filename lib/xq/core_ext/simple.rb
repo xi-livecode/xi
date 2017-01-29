@@ -2,8 +2,8 @@ require 'xq/pattern'
 
 module Xq
   module Pattern::Simple
-    def p(dur=nil)
-      [self].p(dur)
+    def p(dur=nil, **metadata)
+      [self].p(dur, metadata)
     end
   end
 end

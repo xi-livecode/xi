@@ -9,36 +9,45 @@ module Xq
 
     attr_reader :source
 
-    def initialize(source, dur=nil)
-      @source = reduce_source(source, dur)
+    def initialize(source, **metadata)
+      @source = reduce_source(source, metadata[:dur])
+      @metadata = metadata
     end
 
-    def self.[](*args, dur: nil)
-      new(args, dur)
+    def self.[](*args, **metadata)
+      new(args, metadata)
     end
 
-    def inspect
-      "P#{@source}"
-    end
-
-    def p(dur=nil)
-      Pattern.new(self, dur)
+    def p(dur=nil, **metadata)
+      Pattern.new(self, dur: dur, **@metadata.merge(metadata))
     end
 
     def map
       return enum_for(__method__) unless block_given?
-      Pattern.new(@source.map { |e| yield e })
+      Pattern.new(@source.map { |e| yield e }, @metadata)
     end
 
     def find_all
       return enum_for(__method__) unless block_given?
-      Pattern.new(@source.select { |e| yield e })
+      Pattern.new(@source.select { |e| yield e }, @metadata)
     end
     alias_method :select, :find_all
 
     def reject
       return enum_for(__method__) unless block_given?
-      Pattern.new(@source.reject { |e| yield e })
+      Pattern.new(@source.reject { |e| yield e }, @metadata)
+    end
+
+    def inspect
+      ms = @metadata
+        .reject { |_, v| v.nil? }
+        .map { |k, v| "#{k}: #{v.inspect}" }.join(', ')
+
+      "P[#{@source.join(', ')}#{", #{ms}" unless ms.empty?}]"
+    end
+
+    def to_s
+      inspect
     end
 
     private

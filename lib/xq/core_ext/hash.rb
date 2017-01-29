@@ -3,7 +3,7 @@ require 'xq/event'
 
 module Xq
   module Pattern::Hash
-    def p(dur=nil)
+    def p(dur=nil, **metadata)
       Pattern.new(reduce([]) { |es, (key, val)|
         kes = []
         val.p(dur).each do |v|
@@ -11,7 +11,7 @@ module Xq
           kes << Event.new({key => v.value}, start, v.default_duration? ? dur : v.duration)
         end
         es += kes
-      })
+      }, dur: dur, **metadata)
     end
   end
 end
