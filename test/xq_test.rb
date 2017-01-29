@@ -1,11 +1,11 @@
 require 'test_helper'
 
-class XqTest < Minitest::Test
-  def test_that_it_has_a_version_number
+describe Xq do
+  it 'has a version number' do
     refute_nil ::Xq::VERSION
   end
 
-  def test_it_does_something_useful
-    assert false
+  it 'does nothing useful' do
+    assert true
   end
 end
