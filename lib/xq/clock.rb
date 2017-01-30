@@ -54,7 +54,7 @@ module Xq
     alias_method :pause, :play
 
     def inspect
-      "#<#{self.class.class_name}:#{"0x%014x" % object_id} cps=#{cps.inspect} #{playing? ? :playing : :stopped}>"
+      "#<#{self.class.name}:#{"0x%014x" % object_id} cps=#{cps.inspect} #{playing? ? :playing : :stopped}>"
     end
 
     private
@@ -67,13 +67,9 @@ module Xq
     end
 
     def do_tick
-      now = Time.now
+      cycles = Time.now.to_f * cps
       return unless playing?
-
-      @streams.each do |stream|
-        logger.info "sleep 1 sec"
-        sleep 1
-      end
+      @streams.each { |s| s.notify(cycles) }
     rescue => err
       logger.error(err)
     end

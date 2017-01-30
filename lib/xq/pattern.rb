@@ -3,11 +3,12 @@ require 'xq/event'
 
 module Xq
   class Pattern
+    include Enumerable
     extend  Forwardable
 
     def_delegators :@source, :each
 
-    attr_reader :source
+    attr_reader :source, :metadata
 
     def initialize(source, **metadata)
       @source = reduce_source(source, metadata[:dur])
@@ -16,6 +17,11 @@ module Xq
 
     def self.[](*args, **metadata)
       new(args, metadata)
+    end
+
+    def duration
+      e = @source.max_by(&:start)
+      e.start + e.duration
     end
 
     def p(dur=nil, **metadata)
@@ -48,6 +54,10 @@ module Xq
 
     def to_s
       inspect
+    end
+
+    def ~
+      self
     end
 
     private

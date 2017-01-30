@@ -13,6 +13,10 @@ module Xq
         es += kes
       }, dur: dur, **metadata)
     end
+
+    def ~
+      self
+    end
   end
 end
 

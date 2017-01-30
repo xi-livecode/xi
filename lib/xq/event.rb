@@ -12,6 +12,10 @@ module Xq
       new(*args)
     end
 
+    def end
+      @start + duration
+    end
+
     def duration
       @duration || 1
     end
