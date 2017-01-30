@@ -1,8 +1,8 @@
 # Xi
 
-Ξ (Xi /ˈzaɪ/) is a musical pattern language inspired in Tidal and SuperCollider
-for building higher-level musical constructs easily.  It's implemented on the
-Ruby programming language.
+Xi (pronounced /ˈzaɪ/) is a musical pattern language inspired in Tidal and
+SuperCollider for building higher-level musical constructs easily.  It is
+implemented on the Ruby programming language.
 
 Xi is only a patterns library, but can talk to different backends:
 
