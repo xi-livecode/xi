@@ -1,4 +1,4 @@
-module Xq
+module Xi
   class Event
     attr_reader :start, :value
 
@@ -38,4 +38,4 @@ module Xq
   end
 end
 
-E = Xq::Event
+E = Xi::Event

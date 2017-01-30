@@ -1,4 +1,4 @@
-module Xq
+module Xi
   module CoerceToRational
     def /(o)
       super(o.to_r)
@@ -7,5 +7,5 @@ module Xq
 end
 
 class Fixnum
-  prepend Xq::CoerceToRational
+  prepend Xi::CoerceToRational
 end

@@ -1,6 +1,6 @@
-require 'xq/pattern'
+require 'xi/pattern'
 
-module Xq
+module Xi
   module Pattern::Enumerable
     def p(dur=nil, **metadata)
       Pattern.new(self, dur: dur, **metadata)
@@ -9,13 +9,13 @@ module Xq
 end
 
 class Enumerator
-  include Xq::Pattern::Enumerable
+  include Xi::Pattern::Enumerable
 end
 
 class Array
-  include Xq::Pattern::Enumerable
+  include Xi::Pattern::Enumerable
 end
 
 class Range
-  include Xq::Pattern::Enumerable
+  include Xi::Pattern::Enumerable
 end

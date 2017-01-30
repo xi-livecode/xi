@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 require 'bundler/setup'
-require "xq"
-require "xq/repl"
+require "xi"
+require "xi/repl"
 
-include Xq
+include Xi
 
 REPL.start

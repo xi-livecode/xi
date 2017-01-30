@@ -1,17 +1,17 @@
-require "xq/error_log"
+require "xi/error_log"
 require "pry"
 
-module Xq
+module Xi
   module REPL
     extend self
 
-    CONFIG_PATH = File.expand_path("~/.config/xq")
+    CONFIG_PATH = File.expand_path("~/.config/xi")
     HISTORY_FILE = "history"
     INIT_SCRIPT_FILE = "init.rb"
 
     DEFAULT_INIT_SCRIPT =
       "# Here you can customize or define functions that will be available in" \
-      "# Xq, e.g. new streams or a custom clock."
+      "# Xi, e.g. new streams or a custom clock."
 
     def start
       configure
@@ -28,7 +28,7 @@ module Xq
         Pry.config.pager = false
         Pry.config.prompt = [ proc { "" }, proc { "" }]
       else
-        Pry.config.prompt = [ proc { "xq> " }, proc { "..>" }]
+        Pry.config.prompt = [ proc { "xi> " }, proc { "..>" }]
       end
 
       Pry.config.history.file = history_path

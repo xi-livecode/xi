@@ -1,8 +1,8 @@
 require 'test_helper'
 
-describe Xq do
+describe Xi do
   it 'has a version number' do
-    refute_nil ::Xq::VERSION
+    refute_nil ::Xi::VERSION
   end
 
   it 'does nothing useful' do

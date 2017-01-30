@@ -1,3 +1,3 @@
-module Xq
+module Xi
   VERSION = "0.1.0"
 end

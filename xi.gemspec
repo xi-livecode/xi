@@ -1,18 +1,18 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'xq/version'
+require 'xi/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "xq"
-  spec.version       = Xq::VERSION
+  spec.name          = "xi"
+  spec.version       = Xi::VERSION
   spec.authors       = ["Damián Silvani"]
   spec.email         = ["munshkr@gmail.com"]
 
   spec.summary       = %q{Musical pattern language for livecoding}
   spec.description   = %q{A musical pattern language inspired in Tidal and SuperCollider
                           for building higher-level musical constructs easily.}
-  spec.homepage      = "https://github.com/munshkr/xq"
+  spec.homepage      = "https://github.com/munshkr/xi"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'

@@ -4,7 +4,7 @@ require 'set'
 
 Thread.abort_on_exception = true
 
-module Xq
+module Xi
   class Clock
     DEFAULT_CPS  = 1.0
     INTERVAL_SEC = 25 / 1000.0

@@ -1,7 +1,7 @@
-require 'xq/pattern'
-require 'xq/event'
+require 'xi/pattern'
+require 'xi/event'
 
-module Xq
+module Xi
   module Pattern::Hash
     def p(dur=nil, **metadata)
       Pattern.new(reduce([]) { |es, (key, val)|
@@ -21,5 +21,5 @@ module Xq
 end
 
 class Hash
-  include Xq::Pattern::Hash
+  include Xi::Pattern::Hash
 end

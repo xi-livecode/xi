@@ -1,7 +1,7 @@
 require 'forwardable'
-require 'xq/event'
+require 'xi/event'
 
-module Xq
+module Xi
   class Pattern
     include Enumerable
     extend  Forwardable
@@ -84,4 +84,4 @@ module Xq
   end
 end
 
-P = Xq::Pattern
+P = Xi::Pattern

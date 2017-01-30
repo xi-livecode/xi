@@ -1,5 +1,0 @@
-require 'xq/core_ext/enumerable'
-require 'xq/core_ext/fixnum'
-require 'xq/core_ext/hash'
-require 'xq/core_ext/numeric'
-require 'xq/core_ext/simple'

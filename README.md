@@ -1,10 +1,10 @@
-# Xq
+# Xi
 
 A musical pattern language inspired in Tidal and SuperCollider for building
 higher-level musical constructs easily.  It's implemented on the Ruby
 programming language.
 
-Xq is only a patterns library, but can talk to different audio backends:
+Xi is only a patterns library, but can talk to different audio backends:
 
 - [SuperCollider](https://github.com/supercollider/supercollider)
 - MIDI devices
@@ -14,18 +14,18 @@ Xq is only a patterns library, but can talk to different audio backends:
 You will need Ruby 2.1+ installed on your system.  Check by running `ruby
 -v`.  You will also need Bundler.  Install with `gem install bundler`.
 
-Becase Xq is still in **alpha** stage, you will have to checkout this
+Becase Xi is still in **alpha** stage, you will have to checkout this
 repository using Git:
 
-    $ git clone git://github.com/munshkr/xq
+    $ git clone https://github.com/munshkr/xi
 
 After that, change into the new directory and install gem dependencies with
 Bundler:
 
-    $ cd xq
+    $ cd xi
     $ bundle install
 
-You're done! Fire up the REPL from `bin/xq`.
+You're done! Fire up the REPL from `bin/xi`.
 
 ## Development
 
@@ -42,7 +42,7 @@ git commits and tags, and push the `.gem` file to
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at
-https://github.com/munshkr/xq. This project is intended to be a safe, welcoming
+https://github.com/munshkr/xi. This project is intended to be a safe, welcoming
 space for collaboration, and contributors are expected to adhere to the
 [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 

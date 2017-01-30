@@ -1,4 +1,4 @@
-module Xq
+module Xi
   class Stream
     attr_reader :clock, :pattern, :timed_ring
 

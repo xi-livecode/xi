@@ -1,7 +1,7 @@
 require 'singleton'
 require 'thread'
 
-module Xq
+module Xi
   class ErrorLog
     include Singleton
 
