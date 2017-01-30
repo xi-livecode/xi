@@ -1,10 +1,10 @@
 # Xi
 
-A musical pattern language inspired in Tidal and SuperCollider for building
-higher-level musical constructs easily.  It's implemented on the Ruby
-programming language.
+Ξ (Xi /ˈzaɪ/) is a musical pattern language inspired in Tidal and SuperCollider
+for building higher-level musical constructs easily.  It's implemented on the
+Ruby programming language.
 
-Xi is only a patterns library, but can talk to different audio backends:
+Xi is only a patterns library, but can talk to different backends:
 
 - [SuperCollider](https://github.com/supercollider/supercollider)
 - MIDI devices
@@ -29,9 +29,8 @@ You're done! Fire up the REPL from `bin/xi`.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run
-`rake test` to run the tests. You can also run `bin/console` for an interactive
-prompt that will allow you to experiment.
+After checking out the repo, run `bundle` to install dependencies. Then, run
+`rake test` to run the tests.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To
 release a new version, update the version number in `version.rb`, and then run
@@ -50,7 +49,7 @@ space for collaboration, and contributors are expected to adhere to the
 
 The MIT License (MIT)
 
-Copyright (c) 2016 Damián Emiliano Silvani
+Copyright (c) 2017 Damián Emiliano Silvani
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
