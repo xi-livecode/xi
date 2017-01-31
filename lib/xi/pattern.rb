@@ -70,20 +70,33 @@ module Xi
     def reduce_source(source, dur)
       source = source.source if source.is_a?(Pattern)
 
-      source.reduce([]) do |es, value|
-        start = es.last ? es.last.start + es.last.duration : 0
-        if value.is_a?(Pattern)
-          pes = []
-          value.each do |v|
-            pstart = pes.last ? pes.last.start + pes.last.duration : start
-            pes << Event.new(v.value, pstart, v.default_duration? ? dur : v.duration)
+      if source.is_a?(Hash)
+        source.reduce([]) do |es, (key, val)|
+          kes = []
+          val.p(dur).each do |v|
+            start = kes.last ? kes.last.start + kes.last.duration : 0
+            kes << Event.new({key => v.value}, start, v.default_duration? ? dur : v.duration)
           end
-          es += pes
-        elsif value.is_a?(Event)
-          es << Event.new(value.value, value.start, value.default_duration? ? dur : value.duration)
-        else
-          es << Event.new(value, start, dur)
+          es += kes
         end
+      elsif source.respond_to?(:reduce)
+        source.reduce([]) do |es, value|
+          start = es.last ? es.last.start + es.last.duration : 0
+          if value.is_a?(Pattern)
+            pes = []
+            value.each do |v|
+              pstart = pes.last ? pes.last.start + pes.last.duration : start
+              pes << Event.new(v.value, pstart, v.default_duration? ? dur : v.duration)
+            end
+            es += pes
+          elsif value.is_a?(Event)
+            es << Event.new(value.value, value.start, value.default_duration? ? dur : value.duration)
+          else
+            es << Event.new(value, start, dur)
+          end
+        end
+      else
+        fail "source is not an enumerable nor a Hash"
       end
     end
   end
