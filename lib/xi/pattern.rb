@@ -6,13 +6,14 @@ module Xi
     include Enumerable
     extend  Forwardable
 
-    def_delegators :@source, :each
+    def_delegators :@reduced_source, :each, :last, :[]
 
     attr_reader :source, :metadata
 
     def initialize(source, **metadata)
-      @source = reduce_source(source, metadata[:dur])
+      @source = source
       @metadata = metadata
+      @reduced_source = reduce_source(source, metadata[:dur])
     end
 
     def self.[](*args, **metadata)
@@ -20,12 +21,12 @@ module Xi
     end
 
     def duration
-      e = @source.max_by(&:start)
+      e = @reduced_source.max_by(&:start)
       e.start + e.duration
     end
 
     def p(dur=nil, **metadata)
-      Pattern.new(self, dur: dur, **@metadata.merge(metadata))
+      Pattern.new(@source, dur: dur, **@metadata.merge(metadata))
     end
 
     def map
@@ -44,12 +45,16 @@ module Xi
       Pattern.new(@source.reject { |e| yield e }, @metadata)
     end
 
+    def take(*args)
+      Pattern.new(@source.take(*args), @metadata)
+    end
+
     def inspect
       ms = @metadata
         .reject { |_, v| v.nil? }
         .map { |k, v| "#{k}: #{v.inspect}" }.join(', ')
 
-      "P[#{@source.join(', ')}#{", #{ms}" unless ms.empty?}]"
+      "P[#{@source.inspect}#{", #{ms}" unless ms.empty?}]"
     end
 
     def to_s
