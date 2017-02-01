@@ -1,5 +1,6 @@
-require "xi/error_log"
 require "pry"
+require 'io/console'
+require "xi/error_log"
 
 module Xi
   module REPL
@@ -28,7 +29,7 @@ module Xi
         Pry.config.pager = false
         Pry.config.prompt = [ proc { "" }, proc { "" }]
       else
-        Pry.config.prompt = [ proc { "xi> " }, proc { "..>" }]
+        Pry.config.prompt = [ proc { "xi> " }, proc { "..> " }]
       end
 
       Pry.config.history.file = history_path
@@ -40,6 +41,15 @@ module Xi
         end
         puts "(⌣_⌣”) There were more errors..." if more_errors
       end
+
+      Signal.trap("INT") { breakpoint }
+    end
+
+    def breakpoint
+      puts "\nPress Ctrl+C again to terminate."
+      res = STDIN.getch
+      exit if res == "\u0003"
+      puts res
     end
 
     def load_init_script
