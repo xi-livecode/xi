@@ -2,10 +2,11 @@ module Xi
   class Stream
     TimedRing = Struct.new(:ring, :duration, :pos)
 
-    attr_reader :clock, :pattern, :timed_rings_per_params
+    attr_reader :clock, :pattern, :state
 
     def initialize(clock)
       @playing = false
+      @state = {}
       self.clock = clock
     end
 
@@ -40,6 +41,7 @@ module Xi
 
     def stop
       @playing = false
+      @state.clear
       @clock.unsubscribe(self)
       self
     end
@@ -73,6 +75,13 @@ module Xi
 
     def play_events(events)
       logger.info(events)
+      events.each do |h|
+        p, v = h.to_a.first
+        if p == :gate && v != @state[p]
+          logger.info("Gate #{v == 1 ? 'on' : 'off'}")
+        end
+        @state[p] = v
+      end
     end
 
     def build_timed_rings(pattern)
@@ -102,7 +111,8 @@ module Xi
     end
 
     def logger
-      @logger ||= Logger.new(STDOUT)
+      # FIXME this should be configurable
+      @logger ||= Logger.new("/tmp/xi.log")
     end
   end
 end
