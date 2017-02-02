@@ -1,16 +1,17 @@
 module Xi
   class Stream
-    attr_reader :clock, :pattern, :timed_ring
+    TimedRing = Struct.new(:ring, :duration, :pos)
+
+    attr_reader :clock, :pattern, :timed_rings_per_params
 
     def initialize(clock)
       @playing = false
       self.clock = clock
     end
 
-    def set(pattern)
-      @pattern = pattern
-      @pattern_dur = pattern.duration
-      @timed_ring = timed_ring_array(pattern)
+    def set(hash)
+      @pattern = hash.p
+      @timed_rings_per_params = build_timed_rings(@pattern)
       play
       self
     end
@@ -51,33 +52,53 @@ module Xi
     end
 
     def notify(time)
-      return unless playing? && @timed_ring
+      return unless playing? && @timed_rings_per_params
 
-      # FIXME This is slow, it should keep an index and keep shifting it as time passes
-      mtime = time % @pattern_dur
-      pos = @timed_ring.find_index { |(t, _)| t >= mtime }
-      return if pos.nil?
+      # FIXME This is slow, it should keep an index and
+      # keep shifting it as time passes...
+      @timed_rings_per_params.each do |p, tr|
+        mtime = time % tr.duration.to_f
+        pos = tr.ring.find_index { |(t, _)| t >= mtime } || tr.ring.size
+        return if pos.nil?
 
-      if pos != @old_pos
-        @old_pos = pos
-        events = @timed_ring[pos-1].last
-        logger.info("#{Time.now} #{events}")
+        if pos != tr.pos
+          tr.pos = pos
+          events = tr.ring[pos-1].last
+          play_events(events)
+        end
       end
     end
 
     private
 
-    def timed_ring_array(pattern)
-      h = Hash.new { |h, k| h[k] = [] }
-      pattern.each do |event|
-        k = event.value.keys.first
-        h[event.start] << event.value
-        if k == pattern.metadata[:gate]
-          h[event.start] << {gate: 1}
-          h[event.end]   << {gate: 0}
+    def play_events(events)
+      logger.info(events)
+    end
+
+    def build_timed_rings(pattern)
+      events_per_params(pattern).map { |param, events|
+        res = TimedRing.new
+
+        e = events.max_by(&:start)
+        res.duration = e.start + e.duration
+
+        h = Hash.new { |h, k| h[k] = [] }
+        events.each do |event|
+          k = event.value.keys.first
+          h[event.start] << event.value
+          if k == pattern.metadata[:gate]
+            h[event.start] << {gate: 1}
+            h[event.end]   << {gate: 0}
+          end
         end
-      end
-      h.sort_by { |k,_| k }.to_a
+        res.ring = h.sort_by { |k,_| k }.to_a
+
+        [param, res]
+      }.to_h
+    end
+
+    def events_per_params(pattern)
+      pattern.group_by { |e| e.value.keys.first }
     end
 
     def logger
