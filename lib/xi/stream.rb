@@ -1,18 +1,23 @@
+require 'set'
+
 module Xi
   class Stream
     TimedRing = Struct.new(:ring, :duration, :pos)
 
-    attr_reader :clock, :pattern, :state
+    attr_reader :clock, :pattern, :state, :params_tr, :gate_on_tr, :gate_off_tr
 
     def initialize(clock)
       @playing = false
       @state = {}
+      @changed_params = [].to_set
       self.clock = clock
     end
 
     def set(hash)
+      @new_sound_object_id = 0
       @pattern = hash.p
-      @timed_rings_per_params = build_timed_rings(@pattern)
+      @params_tr = params_timed_rings(@pattern)
+      @gate_on_tr, @gate_off_tr = gate_timed_rings(@pattern)
       play
       self
     end
@@ -50,60 +55,119 @@ module Xi
     def inspect
       "#<#{self.class.name}:#{"0x%014x" % object_id} clock=#{@clock.inspect} #{playing? ? :playing : :stopped}>"
     rescue => err
-      puts err
+      logger.error(err)
     end
 
-    def notify(time)
-      return unless playing? && @timed_rings_per_params
-
-      # FIXME This is slow, it should keep an index and
-      # keep shifting it as time passes...
-      @timed_rings_per_params.each do |p, tr|
-        mtime = time % tr.duration.to_f
-        pos = tr.ring.find_index { |(t, _)| t >= mtime } || tr.ring.size
-        return if pos.nil?
-
-        if pos != tr.pos
-          tr.pos = pos
-          events = tr.ring[pos-1].last
-          play_events(events)
-        end
-      end
+    def notify(now)
+      return unless playing? && @params_tr
+      @changed_params.clear
+      do_timed_ring_hash(@params_tr, now) { |es| update_state(es) }
+      do_timed_ring_hash(@gate_off_tr, now) { |ss| do_gate_off(ss) }
+      apply_state_change if state_changed?
+      do_timed_ring_hash(@gate_on_tr, now) { |ss| do_gate_on(ss) }
     end
 
     private
 
-    def play_events(events)
+    def do_gate_on(ss)
+      logger.info "Gate on: #{ss}"
+    end
+
+    def do_gate_off(ss)
+      logger.info "Gate off: #{ss}"
+    end
+
+    def do_timed_ring_hash(tr_h, now)
+      tr_h.each do |p, tr|
+        # FIXME This is slow, it should keep an index and
+        # keep shifting it as time passes...
+        mtime = now % tr.duration.to_f
+        pos = tr.ring.find_index { |(t, _)| t >= mtime } || tr.ring.size
+
+        next if (mtime - tr.ring[pos-1][0]) > 0.05
+
+        if pos != tr.pos
+          logger.info "mtime=#{mtime}, tr.ring[pos-1]=#{tr.ring[pos-1]}"
+          tr.pos = pos
+          values = tr.ring[pos-1].last
+          yield values
+        end
+      end
+    end
+
+    def update_state(events)
       logger.info(events)
       events.each do |h|
         p, v = h.to_a.first
-        if p == :gate && v != @state[p]
-          logger.info("Gate #{v == 1 ? 'on' : 'off'}")
-        end
+        @changed_params << p if v != @state[p]
         @state[p] = v
       end
     end
 
-    def build_timed_rings(pattern)
-      events_per_params(pattern).map { |param, events|
-        res = TimedRing.new
+    def state_changed?
+      !@changed_params.empty?
+    end
 
+    def apply_state_change
+      logger.info "Changed parameters: #{@changed_params.to_a}"
+    end
+
+    def params_timed_rings(pattern)
+      events_per_params(pattern).map { |p, events|
+        tr = TimedRing.new
+
+        # Create timed ring for events
         e = events.max_by(&:start)
-        res.duration = e.start + e.duration
+        tr.duration = e.start + e.duration
 
         h = Hash.new { |h, k| h[k] = [] }
         events.each do |event|
-          k = event.value.keys.first
           h[event.start] << event.value
-          if k == pattern.metadata[:gate]
-            h[event.start] << {gate: 1}
-            h[event.end]   << {gate: 0}
-          end
         end
-        res.ring = h.sort_by { |k,_| k }.to_a
+        tr.ring = h.sort_by { |k, _| k }.to_a
 
-        [param, res]
+        [p, tr]
       }.to_h
+    end
+
+    def gate_timed_rings(pattern)
+      # Build Gate on and gate off timed rings
+      gate_on_tr = {}
+      gate_off_tr = {}
+      so_id = @new_sound_object_id
+
+      evs = events_per_params(pattern).select do |p, _|
+        p == pattern.metadata[:gate]
+      end
+
+      evs.each do |p, events|
+        tr_on = TimedRing.new
+        tr_off = TimedRing.new
+
+        # Create timed ring for events
+        e = events.max_by(&:start)
+        tr_on.duration = e.start + e.duration
+        tr_off.duration = tr_on.duration
+
+        h_on = Hash.new { |h, k| h[k] = [] }
+        h_off = Hash.new { |h, k| h[k] = [] }
+
+        events.each do |event|
+          h_on[event.start] << so_id
+          h_off[event.end] << so_id
+          so_id += 1
+        end
+
+        tr_on.ring = h_on.sort_by { |k, _| k }.to_a
+        tr_off.ring = h_off.sort_by { |k, _| k }.to_a
+
+        gate_on_tr[p] = tr_on
+        gate_off_tr[p] = tr_off
+      end
+
+      @new_sound_object_id = so_id
+
+      [gate_on_tr, gate_off_tr]
     end
 
     def events_per_params(pattern)

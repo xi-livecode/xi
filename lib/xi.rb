@@ -9,10 +9,6 @@ module Xi::Init
   def default_clock
     @default_clock ||= Clock.new
   end
-
-  def s1
-    @s1 ||= Stream.new(default_clock)
-  end
 end
 
 self.extend Xi::Init
