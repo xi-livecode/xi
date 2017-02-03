@@ -11,7 +11,7 @@ module Xi
     INIT_SCRIPT_FILE = "init.rb"
 
     DEFAULT_INIT_SCRIPT =
-      "# Here you can customize or define functions that will be available in" \
+      "# Here you can customize or define functions that will be available in\n" \
       "# Xi, e.g. new streams or a custom clock."
 
     def start
