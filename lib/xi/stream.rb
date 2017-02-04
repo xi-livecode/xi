@@ -4,6 +4,8 @@ module Xi
   class Stream
     TimedRing = Struct.new(:ring, :duration, :pos)
 
+    WINDOW_SEC = 0.05
+
     attr_reader :clock, :pattern, :state, :params_tr, :gate_on_tr, :gate_off_tr
 
     def initialize(clock)
@@ -79,12 +81,11 @@ module Xi
 
     def do_timed_ring_hash(tr_h, now)
       tr_h.each do |p, tr|
-        # FIXME This is slow, it should keep an index and
-        # keep shifting it as time passes...
         mtime = now % tr.duration.to_f
+        # FIXME Avoid find_index, keep an index and move it when necessary
         pos = tr.ring.find_index { |(t, _)| t >= mtime } || tr.ring.size
 
-        next if (mtime - tr.ring[pos-1][0]) > 0.05
+        next if (mtime - tr.ring[pos-1][0]) > WINDOW_SEC
 
         if pos != tr.pos
           logger.info "mtime=#{mtime}, tr.ring[pos-1]=#{tr.ring[pos-1]}"
