@@ -29,26 +29,6 @@ module Xi
       Pattern.new(@source, dur: dur, **@metadata.merge(metadata))
     end
 
-    def map
-      return enum_for(__method__) unless block_given?
-      Pattern.new(@source.map { |e| yield e }, @metadata)
-    end
-
-    def find_all
-      return enum_for(__method__) unless block_given?
-      Pattern.new(@source.select { |e| yield e }, @metadata)
-    end
-    alias_method :select, :find_all
-
-    def reject
-      return enum_for(__method__) unless block_given?
-      Pattern.new(@source.reject { |e| yield e }, @metadata)
-    end
-
-    def take(*args)
-      Pattern.new(@source.take(*args), @metadata)
-    end
-
     def inspect
       ms = @metadata
         .reject { |_, v| v.nil? }
@@ -72,12 +52,7 @@ module Xi
 
       if source.is_a?(Hash)
         source.reduce([]) do |es, (key, val)|
-          kes = []
-          val.p(dur).each do |v|
-            start = kes.last ? kes.last.start + kes.last.duration : 0
-            kes << Event.new({key => v.value}, start, v.default_duration? ? dur : v.duration)
-          end
-          es += kes
+          es += val.p(dur).map { |e| Event.new({key => e.value}, e.start, e.duration) }
         end
       elsif source.respond_to?(:reduce)
         source.reduce([]) do |es, value|
@@ -91,6 +66,8 @@ module Xi
             es += pes
           elsif value.is_a?(Event)
             es << Event.new(value.value, value.start, value.default_duration? ? dur : value.duration)
+          elsif value.is_a?(Array)
+            es += value.map { |v| Event.new(v, start, dur) }
           else
             es << Event.new(value, start, dur)
           end
