@@ -6,7 +6,7 @@ module Xi
 
     WINDOW_SEC = 0.05
 
-    attr_reader :clock, :pattern, :state, :params_tr, :gate_on_tr, :gate_off_tr
+    attr_reader :clock, :param_patterns, :gate_param, :state, :params_tr, :gate_on_tr, :gate_off_tr
 
     def initialize(clock)
       @playing = false
@@ -15,11 +15,12 @@ module Xi
       self.clock = clock
     end
 
-    def set(hash)
+    def set(param_patterns, gate: nil)
       @new_sound_object_id = 0
-      @pattern = hash.p
-      @params_tr = params_timed_rings(@pattern)
-      @gate_on_tr, @gate_off_tr = gate_timed_rings(@pattern)
+      @gate_param = gate
+      @param_patterns = param_patterns.map { |k, v| [k, v.p] }.to_h
+      @params_tr = params_timed_rings(@param_patterns)
+      @gate_on_tr, @gate_off_tr = gate_timed_rings(@param_patterns, @gate_param)
       play
       self
     end
@@ -63,10 +64,10 @@ module Xi
     def notify(now)
       return unless playing? && @params_tr
       @changed_params.clear
-      do_timed_ring_hash(@params_tr, now) { |es| update_state(es) }
-      do_timed_ring_hash(@gate_off_tr, now) { |ss| do_gate_off(ss) }
+      do_timed_ring_hash(@params_tr, now) { |p, es| update_state(p, es) }
+      do_timed_ring_hash(@gate_off_tr, now) { |_, ss| do_gate_off(ss) }
       apply_state_change if state_changed?
-      do_timed_ring_hash(@gate_on_tr, now) { |ss| do_gate_on(ss) }
+      do_timed_ring_hash(@gate_on_tr, now) { |_, ss| do_gate_on(ss) }
     end
 
     private
@@ -91,15 +92,14 @@ module Xi
           logger.info "mtime=#{mtime}, tr.ring[pos-1]=#{tr.ring[pos-1]}"
           tr.pos = pos
           values = tr.ring[pos-1].last
-          yield values
+          yield p, values
         end
       end
     end
 
-    def update_state(events)
-      logger.info(events)
-      events.each do |h|
-        p, v = h.to_a.first
+    def update_state(p, values)
+      logger.info("#{p} => #{values}")
+      values.each do |v|
         @changed_params << p if v != @state[p]
         @state[p] = v
       end
@@ -113,16 +113,14 @@ module Xi
       logger.info "Changed parameters: #{@changed_params.to_a}"
     end
 
-    def params_timed_rings(pattern)
-      events_per_params(pattern).map { |p, events|
-        tr = TimedRing.new
-
+    def params_timed_rings(params_pattern)
+      params_pattern.map { |p, pattern|
         # Create timed ring for events
-        e = events.max_by(&:start)
-        tr.duration = e.start + e.duration
+        tr = TimedRing.new
+        tr.duration = pattern.total_duration
 
         h = Hash.new { |h, k| h[k] = [] }
-        events.each do |event|
+        pattern.each do |event|
           h[event.start] << event.value
         end
         tr.ring = h.sort_by { |k, _| k }.to_a
@@ -131,31 +129,26 @@ module Xi
       }.to_h
     end
 
-    def gate_timed_rings(pattern)
+    def gate_timed_rings(params_pattern, gate_param)
       # Build Gate on and gate off timed rings
       gate_on_tr = {}
       gate_off_tr = {}
       so_id = @new_sound_object_id
 
-      evs = events_per_params(pattern).select do |p, _|
-        p == pattern.metadata[:gate]
-      end
-
-      evs.each do |p, events|
+      params_pattern.select { |p, _| p == gate_param }.each do |p, pattern|
+        # Create timed ring for events
         tr_on = TimedRing.new
         tr_off = TimedRing.new
 
-        # Create timed ring for events
-        e = events.max_by(&:start)
-        tr_on.duration = e.start + e.duration
-        tr_off.duration = tr_on.duration
+        tr_on.duration = pattern.total_duration
+        tr_off.duration = pattern.total_duration
 
         h_on = Hash.new { |h, k| h[k] = [] }
         h_off = Hash.new { |h, k| h[k] = [] }
 
-        events.each do |event|
-          h_on[event.start] << so_id
-          h_off[event.end] << so_id
+        pattern.each do |e|
+          h_on[e.start] << so_id
+          h_off[e.end] << so_id
           so_id += 1
         end
 
@@ -169,10 +162,6 @@ module Xi
       @new_sound_object_id = so_id
 
       [gate_on_tr, gate_off_tr]
-    end
-
-    def events_per_params(pattern)
-      pattern.group_by { |e| e.value.keys.first }
     end
 
     def logger
