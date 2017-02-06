@@ -6,25 +6,35 @@ module Xi
 
     WINDOW_SEC = 0.05
 
-    attr_reader :clock, :param_patterns, :gate_param, :state, :params_tr, :gate_on_tr, :gate_off_tr
+    attr_reader :clock, :param_patterns, :state, :dur, :gate
 
     def initialize(clock)
       @playing = false
       @state = {}
       @changed_params = [].to_set
+
       self.clock = clock
     end
 
-    def set(param_patterns, gate: nil)
-      @new_sound_object_id = 0
-      @gate_param = gate
-      @param_patterns = param_patterns.map { |k, v| [k, v.p] }.to_h
-      @params_tr = params_timed_rings(@param_patterns)
-      @gate_on_tr, @gate_off_tr = gate_timed_rings(@param_patterns, @gate_param)
+    def set(hash, dur: nil, gate: nil)
+      @hash = hash
+      @gate = gate if gate
+      @dur  = dur  if dur
+
+      update_internal_structures
       play
       self
     end
-    alias_method :<, :set
+
+    def dur=(new_dur)
+      @dur = new_dur
+      update_internal_structures
+    end
+
+    def gate=(new_gate)
+      @gate = new_gate
+      update_internal_structures
+    end
 
     def clock=(new_clock)
       @clock.unsubscribe(self) if @clock
@@ -71,6 +81,13 @@ module Xi
     end
 
     private
+
+    def update_internal_structures
+      @new_sound_object_id = 0
+      @param_patterns = @hash.map { |k, v| [k, v.p(@dur)] }.to_h
+      @params_tr = params_timed_rings(@param_patterns)
+      @gate_on_tr, @gate_off_tr = gate_timed_rings(@param_patterns, @gate)
+    end
 
     def do_gate_on(ss)
       logger.info "Gate on: #{ss}"
