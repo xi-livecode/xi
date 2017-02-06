@@ -6,7 +6,7 @@ module Xi
 
     WINDOW_SEC = 0.05
 
-    attr_reader :clock, :param_patterns, :state, :dur, :gate
+    attr_reader :clock, :source, :source_patterns, :state, :event_duration, :gate
 
     def initialize(clock)
       @playing = false
@@ -16,23 +16,23 @@ module Xi
       self.clock = clock
     end
 
-    def set(hash, dur: nil, gate: nil)
-      @hash = hash
+    def set(source, event_duration: nil, gate: nil)
+      @source = source
       @gate = gate if gate
-      @dur  = dur  if dur
+      @event_duration = event_duration if event_duration
 
       update_internal_structures
       play
       self
     end
 
-    def dur=(new_dur)
-      @dur = new_dur
+    def event_duration=(new_value)
+      @event_duration = new_value
       update_internal_structures
     end
 
-    def gate=(new_gate)
-      @gate = new_gate
+    def gate=(new_value)
+      @gate = new_value
       update_internal_structures
     end
 
@@ -84,9 +84,9 @@ module Xi
 
     def update_internal_structures
       @new_sound_object_id = 0
-      @param_patterns = @hash.map { |k, v| [k, v.p(@dur)] }.to_h
-      @params_tr = params_timed_rings(@param_patterns)
-      @gate_on_tr, @gate_off_tr = gate_timed_rings(@param_patterns, @gate)
+      @source_patterns = @source.map { |k, v| [k, v.p(@dur)] }.to_h
+      @params_tr = params_timed_rings(@source_patterns)
+      @gate_on_tr, @gate_off_tr = gate_timed_rings(@source_patterns, @gate)
     end
 
     def do_gate_on(ss)
