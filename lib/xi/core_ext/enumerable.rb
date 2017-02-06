@@ -3,7 +3,7 @@ require 'xi/pattern'
 module Xi
   module Pattern::Enumerable
     def p(dur=nil, **metadata)
-      Pattern.new(self, dur: dur, **metadata)
+      Pattern.new(self, event_duration: dur, **metadata)
     end
   end
 end
