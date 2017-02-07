@@ -12,6 +12,10 @@ module Xi
       new(*args)
     end
 
+    def ==(o)
+      [@value, @start, @duration] == [o.value, o.start, o.duration]
+    end
+
     def end
       @start + duration
     end

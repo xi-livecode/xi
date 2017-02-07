@@ -136,11 +136,11 @@ module Xi
         tr = TimedRing.new
         tr.duration = pattern.total_duration
 
-        h = Hash.new { |h, k| h[k] = [] }
+        ring = Hash.new { |h, k| h[k] = [] }
         pattern.each do |event|
-          h[event.start] << event.value
+          ring[event.start] << event.value
         end
-        tr.ring = h.sort_by { |k, _| k }.to_a
+        tr.ring = ring.sort_by { |k, _| k }.to_a
 
         [p, tr]
       }.to_h

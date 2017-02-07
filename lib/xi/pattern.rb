@@ -31,9 +31,9 @@ module Xi
       pos = 0
       @source.each do |value|
         if value.is_a?(Pattern)
-          value.each do |v|
-            yield v
-            pos += v.duration
+          value.each do |e|
+            yield Event.new(e.value, pos, dur)
+            pos += dur
           end
         elsif value.is_a?(Event)
           yield value
