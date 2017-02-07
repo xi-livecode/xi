@@ -5,10 +5,13 @@ module Xi
   class Pattern
     include Enumerable
     include Transforms
+    extend  Forwardable
 
     attr_reader :source, :event_duration, :metadata
 
-    def initialize(source=nil, event_duration: nil, **metadata)
+    alias_method :dur, :event_duration
+
+    def initialize(source=nil, **metadata)
       @source = if block_given?
         Enumerator.new { |y| yield y }
       elsif source
@@ -16,23 +19,35 @@ module Xi
       else
         fail ArgumentError, 'must provide source or block'
       end
-      @event_duration = event_duration || 1
+      @event_duration = metadata.delete(:dur) || metadata.delete(:event_duration) || 1
       @metadata = metadata
+    end
+
+    def self.[](*args, **metadata)
+      new(args, **metadata)
+    end
+
+    def ==(o)
+      self.class == o.class &&
+        source == o.source &&
+        event_duration == o.event_duration &&
+        metadata == o.metadata
     end
 
     def p(dur=nil, **metadata)
       Pattern.new(@source, event_duration: dur, **metadata)
     end
 
-    def each
+    def each_event
       return enum_for(__method__) unless block_given?
 
       dur = @event_duration
       pos = 0
+
       @source.each do |value|
         if value.is_a?(Pattern)
-          value.each do |e|
-            yield Event.new(e.value, pos, dur)
+          value.each do |v|
+            yield Event.new(v, pos, dur)
             pos += dur
           end
         elsif value.is_a?(Event)
@@ -45,55 +60,47 @@ module Xi
       end
     end
 
-    def map
+    def each
       return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each { |e| y << yield(e) } }
+      each_event { |e| yield e.value }
     end
-    alias_method :collect, :map
 
-    def select
+    def inspect
+      ss = if @source.respond_to?(:join)
+             @source.join(', ')
+           elsif @source.is_a?(Enumerator)
+             "!enum"
+           else
+             @source.inspect
+           end
+
+      ms = @metadata.reject { |_, v| v.nil? }
+      ms.merge!(dur: dur) if dur != 1
+      ms = ms.map { |k, v| "#{k}: #{v.inspect}" }.join(', ')
+
+      "P[#{ss}#{", #{ms}" unless ms.empty?}]"
+    end
+    alias_method :to_s, :inspect
+
+    def map_events
       return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each { |e| y << e if yield(e) } }
+      Pattern.new(dur: dur, **metadata) { |y| each_event { |e| y << yield(e) } }
     end
-    alias_method :find_all, :select
+    alias_method :collect_events, :map_events
 
-    def reject
+    def select_events
       return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each { |e| y << e unless yield(e) } }
+      Pattern.new { |y| each_event { |e| y << e if yield(e) } }
     end
+    alias_method :find_all_events, :select_events
 
-    def each_v
+    def reject_events
       return enum_for(__method__) unless block_given?
-      each { |e| yield e.value }
+      Pattern.new { |y| each_event { |e| y << e unless yield(e) } }
     end
 
-    def reverse_each_v
-      reverse_each { |e| yield(e.value) }
-    end
-
-    def map_v
-      return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each_v { |v| y << yield(v) } }
-    end
-    alias_method :collect_v, :map_v
-
-    def select_v
-      return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each_v { |v| y << v if yield(v) } }
-    end
-    alias_method :find_all_v, :select_v
-
-    def reject_v
-      return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each_v { |v| y << v unless yield(v) } }
-    end
-
-    def take_v(*args)
-      each_v.take(*args)
-    end
-
-    def to_v
-      each_v.to_a
+    def to_events
+      each_event.to_a
     end
   end
 end

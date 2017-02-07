@@ -13,7 +13,7 @@ module Xi
       #
       def -@
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:-@) ? -v : v) }
+          each { |v| y << (v.respond_to?(:-@) ? -v : v) }
         end
       end
 
@@ -37,12 +37,12 @@ module Xi
       def +(object)
         if object.is_a?(Pattern)
           Pattern.new do |y|
-            each_v { |v| y << v }
-            object.each_v { |v| y << v }
+            each { |v| y << v }
+            object.each { |v| y << v }
           end
         else
           Pattern.new do |y|
-            each_v { |v| y << (v.respond_to?(:+) ? v + object : v) }
+            each { |v| y << (v.respond_to?(:+) ? v + object : v) }
           end
         end
       end
@@ -61,7 +61,7 @@ module Xi
       #
       def -(numeric)
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:-) ? v - numeric : v) }
+          each { |v| y << (v.respond_to?(:-) ? v - numeric : v) }
         end
       end
 
@@ -79,7 +79,7 @@ module Xi
       #
       def *(numeric)
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:*) ? v * numeric : v) }
+          each { |v| y << (v.respond_to?(:*) ? v * numeric : v) }
         end
       end
 
@@ -97,7 +97,7 @@ module Xi
       #
       def /(numeric)
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:/) ? v / numeric : v) }
+          each { |v| y << (v.respond_to?(:/) ? v / numeric : v) }
         end
       end
 
@@ -115,7 +115,7 @@ module Xi
       #
       def %(numeric)
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:%) ? v % numeric : v) }
+          each { |v| y << (v.respond_to?(:%) ? v % numeric : v) }
         end
       end
 
@@ -133,7 +133,7 @@ module Xi
       #
       def **(numeric)
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:**) ? v ** numeric : v) }
+          each { |v| y << (v.respond_to?(:**) ? v ** numeric : v) }
         end
       end
       alias_method :^, :**
@@ -172,7 +172,7 @@ module Xi
             offset_items = []
 
             is_empty = true
-            each_v do |v|
+            each do |v|
               is_empty = false
               if c > 0
                 offset_items << v
@@ -198,8 +198,8 @@ module Xi
       #
       def bounce
         Pattern.new do |y|
-          each_v { |v| y << v }
-          reverse_each_v { |v| y << v }
+          each { |v| y << v }
+          reverse_each { |v| y << v }
         end
       end
 
@@ -219,7 +219,7 @@ module Xi
       #
       def normalize(min, max)
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:-) ? (v - min) / (max - min) : v) }
+          each { |v| y << (v.respond_to?(:-) ? (v - min) / (max - min) : v) }
         end
       end
 
@@ -241,7 +241,7 @@ module Xi
       #
       def denormalize(min, max)
         Pattern.new do |y|
-          each_v { |v| y << (v.respond_to?(:*) ? (max - min) * v + min : v) }
+          each { |v| y << (v.respond_to?(:*) ? (max - min) * v + min : v) }
         end
       end
 
@@ -263,14 +263,14 @@ module Xi
       # TODO Document
       def decelerate(num)
         Pattern.new do |y|
-          each { |e| y << E[e.value, e.start * num, e.duration * num] }
+          each_event { |e| y << E[e.value, e.start * num, e.duration * num] }
         end
       end
 
       # TODO Document
       def accelerate(num)
         Pattern.new do |y|
-          each { |e| y << E[e.value, e.start / num, e.duration / num] }
+          each_event { |e| y << E[e.value, e.start / num, e.duration / num] }
         end
       end
 
@@ -279,8 +279,8 @@ module Xi
       #
       def sometimes(probability=0.5)
         Pattern.new do |y|
-          probability.p.each_v do |prob|
-            each_v { |v| y << (rand < prob ? v : nil) }
+          probability.p.each do |prob|
+            each { |v| y << (rand < prob ? v : nil) }
           end
         end
       end
@@ -290,8 +290,8 @@ module Xi
       #
       def repeat_each(times)
         Pattern.new do |y|
-          times.p.each_v do |t|
-            each_v { |v| t.times { y << v } }
+          times.p.each do |t|
+            each { |v| t.times { y << v } }
           end
         end
       end

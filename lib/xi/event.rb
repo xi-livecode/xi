@@ -13,7 +13,8 @@ module Xi
     end
 
     def ==(o)
-      value == o.value &&
+      self.class == o.class &&
+        value == o.value &&
         start == o.start &&
         duration == o.duration
     end

@@ -41,7 +41,7 @@ describe Xi::Event do
   describe '#p' do
     it 'returns a Pattern which enumerates the same Event' do
       @e = Xi::Event.new(:a, 1, 4)
-      assert_equal [@e], @e.p.to_a
+      assert_equal [@e], @e.p.to_events
     end
   end
 
