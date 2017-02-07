@@ -1,8 +1,8 @@
 module Xi
   class Event
-    attr_reader :start, :value
+    attr_reader :value, :start, :duration
 
-    def initialize(value, start=0, duration=nil)
+    def initialize(value, start=0, duration=1)
       @value = value
       @start = start
       @duration = duration
@@ -13,27 +13,22 @@ module Xi
     end
 
     def ==(o)
-      [@value, @start, @duration] == [o.value, o.start, o.duration]
+      value == o.value &&
+        start == o.start &&
+        duration == o.duration
     end
 
     def end
-      @start + duration
+      @start + @duration
     end
 
-    def duration
-      @duration || 1
-    end
-
-    def default_duration?
-      @duration.nil?
-    end
-
-    def p(dur=nil)
-      [@value].p(dur)
+    def p(dur=nil, **metadata)
+      [self].p(dur, metadata)
     end
 
     def inspect
-      "E[#{@value.inspect},#{@start}#{",#{@duration}" if @duration}]"
+      "E[#{@value.inspect},#{@start}" \
+        "#{",#{@duration}" if @duration != 1}]"
     end
 
     def to_s
