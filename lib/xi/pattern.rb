@@ -67,6 +67,10 @@ module Xi
       each { |e| yield e.value }
     end
 
+    def reverse_each_v
+      reverse_each { |e| yield(e.value) }
+    end
+
     def map_v
       return enum_for(__method__) unless block_given?
       Pattern.new { |y| each_v { |v| y << yield(v) } }
@@ -82,6 +86,10 @@ module Xi
     def reject_v
       return enum_for(__method__) unless block_given?
       Pattern.new { |y| each_v { |v| y << v unless yield(v) } }
+    end
+
+    def take_v(*args)
+      each_v.take(*args)
     end
 
     def to_v
