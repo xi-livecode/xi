@@ -44,6 +44,49 @@ module Xi
         end
       end
     end
+
+    def map
+      return enum_for(__method__) unless block_given?
+      Pattern.new { |y| each { |e| y << yield(e) } }
+    end
+    alias_method :collect, :map
+
+    def select
+      return enum_for(__method__) unless block_given?
+      Pattern.new { |y| each { |e| y << e if yield(e) } }
+    end
+    alias_method :find_all, :select
+
+    def reject
+      return enum_for(__method__) unless block_given?
+      Pattern.new { |y| each { |e| y << e unless yield(e) } }
+    end
+
+    def each_v
+      return enum_for(__method__) unless block_given?
+      each { |e| yield e.value }
+    end
+
+    def map_v
+      return enum_for(__method__) unless block_given?
+      Pattern.new { |y| each_v { |v| y << yield(v) } }
+    end
+    alias_method :collect_v, :map_v
+
+    def select_v
+      return enum_for(__method__) unless block_given?
+      Pattern.new { |y| each_v { |v| y << v if yield(v) } }
+    end
+    alias_method :find_all_v, :select_v
+
+    def reject_v
+      return enum_for(__method__) unless block_given?
+      Pattern.new { |y| each_v { |v| y << v unless yield(v) } }
+    end
+
+    def to_v
+      each_v.to_a
+    end
   end
 end
 
