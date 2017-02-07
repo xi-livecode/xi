@@ -6,6 +6,10 @@ require 'xi/stream'
 require 'xi/clock'
 
 module Xi::Init
+  def inf
+    Float::INFINITY
+  end
+
   def default_clock
     @default_clock ||= Clock.new
   end
