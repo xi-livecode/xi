@@ -11,12 +11,10 @@ module Xi
     def initialize(source=nil, event_duration: nil, **metadata)
       @source = if block_given?
         Enumerator.new { |y| yield y }
+      elsif source
+        source
       else
-        if source.nil?
-          fail ArgumentError, 'must provide source'
-        else
-          source
-        end
+        fail ArgumentError, 'must provide source or block'
       end
       @event_duration = event_duration || 1
       @metadata = metadata
@@ -26,10 +24,10 @@ module Xi
       Pattern.new(@source, event_duration: dur, **metadata)
     end
 
-    def each(dur=nil)
-      return enum_for(__method__, dur) unless block_given?
+    def each
+      return enum_for(__method__) unless block_given?
 
-      dur ||= @event_duration
+      dur = @event_duration
       pos = 0
       @source.each do |value|
         if value.is_a?(Pattern)
