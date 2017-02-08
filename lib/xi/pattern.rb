@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'xi/event'
 require 'xi/pattern/transforms'
 require 'xi/pattern/generators'
@@ -37,7 +38,8 @@ module Xi
     end
 
     def p(dur=nil, **metadata)
-      Pattern.new(@source, event_duration: dur, **metadata)
+      Pattern.new(@source, dur: dur || @event_duration,
+                  **@metadata.merge(metadata))
     end
 
     def each_event
@@ -71,7 +73,7 @@ module Xi
       ss = if @source.respond_to?(:join)
              @source.join(', ')
            elsif @source.is_a?(Enumerator)
-             "!enum"
+             "?enum"
            else
              @source.inspect
            end
