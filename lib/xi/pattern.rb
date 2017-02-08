@@ -102,6 +102,18 @@ module Xi
     def to_events
       each_event.to_a
     end
+
+    def peek(limit=10)
+      values = take(limit + 1)
+      puts "There are more than #{limit} values..." if values.size > limit
+      values.take(limit)
+    end
+
+    def peek_events(limit=10)
+      events = each_event.take(limit + 1)
+      puts "There are more than #{limit} events..." if events.size > limit
+      events.take(limit)
+    end
   end
 end
 
