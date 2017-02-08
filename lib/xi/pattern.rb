@@ -1,10 +1,12 @@
 require 'xi/event'
 require 'xi/pattern/transforms'
+require 'xi/pattern/generators'
 
 module Xi
   class Pattern
     include Enumerable
     include Transforms
+    include Generators
     extend  Forwardable
 
     attr_reader :source, :event_duration, :metadata
