@@ -109,12 +109,16 @@ module Xi
 
         # TODO Document
         def sin(quant, dur=1)
-          Pattern.new(quant) do |y|
+          Pattern.new(quant, dur: dur/quant) do |y|
             event_dur = dur / quant
             quant.times do |i|
               y << E[Math.sin(i/quant * 2 * Math::PI), i * event_dur, event_dur]
             end
           end
+        end
+
+        def sin1(quant, dur=1)
+          sin(quant, dur).scale(-1, 1, 0, 1).p(dur/quant)
         end
 
         private
