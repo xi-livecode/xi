@@ -10,24 +10,39 @@ module Xi
     include Generators
     extend  Forwardable
 
-    attr_reader :source, :event_duration, :metadata
+    attr_reader :source, :event_duration, :metadata, :total_duration
 
     alias_method :dur, :event_duration
 
-    def initialize(source=nil, **metadata)
+    def_delegators :@source, :size
+
+    def initialize(obj_or_size=nil, **metadata)
       @source = if block_given?
-        Enumerator.new { |y| yield y }
-      elsif source
-        source
+        Enumerator.new(obj_or_size) { |y| yield y }
+      elsif obj_or_size
+        obj_or_size
       else
         fail ArgumentError, 'must provide source or block'
       end
+
+      @is_infinite = @source.size.nil? || @source.size == Float::INFINITY
       @event_duration = metadata.delete(:dur) || metadata.delete(:event_duration) || 1
       @metadata = metadata
+
+      if @is_infinite
+        @total_duration = @event_duration
+      else
+        last_ev = each_event.take(@source.size).last
+        @total_duration = last_ev ? last_ev.start + last_ev.duration : 0
+      end
     end
 
     def self.[](*args, **metadata)
       new(args, **metadata)
+    end
+
+    def infinite?
+      @is_infinite
     end
 
     def ==(o)
