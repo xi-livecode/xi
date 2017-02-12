@@ -197,9 +197,9 @@ module Xi
       # @return [Pattern]
       #
       def bounce
-        Pattern.new(self, size: size * 2) do |y|
-          each { |v| y << v }
-          reverse_each { |v| y << v }
+        Pattern.new(self, size: size * 2 - 1) do |y|
+          each.with_index { |v, i| y << v if i > 0 }
+          reverse_each.with_index { |v, i| y << v if i > 0 }
         end
       end
 
