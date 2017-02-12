@@ -2,8 +2,6 @@ require 'set'
 
 module Xi
   class Stream
-    TimedRing = Struct.new(:ring, :duration, :pos)
-
     WINDOW_SEC = 0.05
 
     attr_reader :clock, :source, :source_patterns, :state, :event_duration, :gate
@@ -21,8 +19,9 @@ module Xi
       @gate = gate if gate
       @event_duration = event_duration if event_duration
 
-      #update_internal_structures
-      #play
+      update_internal_structures
+      play
+
       self
     end
     alias_method :<<, :set
@@ -73,113 +72,83 @@ module Xi
     end
 
     def notify(now)
-      return unless playing? && @params_tr
+      return unless playing? && @source
+
       @changed_params.clear
-      do_timed_ring_hash(@params_tr, now) { |p, es| update_state(p, es) }
-      do_timed_ring_hash(@gate_off_tr, now) { |_, ss| do_gate_off(ss) }
-      apply_state_change if state_changed?
-      do_timed_ring_hash(@gate_on_tr, now) { |_, ss| do_gate_on(ss) }
+      forward_enums(now) if @must_forward
+
+      play_enums(now)
+
+      do_gate_off     if gate_param_changed?
+      do_state_change if state_changed?
+      do_gate_on      if gate_param_changed?
     end
 
     private
 
-    def update_internal_structures
-      @new_sound_object_id = 0
-      @source_patterns = @source.map { |k, v| [k, v.p(@dur)] }.to_h
-      @params_tr = params_timed_rings(@source_patterns)
-      @gate_on_tr, @gate_off_tr = gate_timed_rings(@source_patterns, @gate)
+    def forward_enums(now)
+      @enums.each do |p, (enum, total_dur)|
+        cur_pos = now % total_dur
+        next_ev = enum.peek
+
+        while distance = (cur_pos - next_ev.start) % total_dur do
+          enum.next
+          break if distance <= next_ev.duration
+          next_ev = enum.peek
+        end
+      end
+      @must_forward = false
     end
 
-    def do_gate_on(ss)
-      logger.info "Gate on: #{ss}"
-    end
+    def play_enums(now)
+      @enums.each do |p, (enum, total_dur)|
+        cur_pos = now % total_dur
+        next_ev = enum.peek
 
-    def do_gate_off(ss)
-      logger.info "Gate off: #{ss}"
-    end
-
-    def do_timed_ring_hash(tr_h, now)
-      tr_h.each do |p, tr|
-        mtime = now % tr.duration.to_f
-        # FIXME Avoid find_index, keep an index and move it when necessary
-        pos = tr.ring.find_index { |(t, _)| t >= mtime } || tr.ring.size
-
-        next if (mtime - tr.ring[pos-1][0]) > WINDOW_SEC
-
-        if pos != tr.pos
-          logger.info "mtime=#{mtime}, tr.ring[pos-1]=#{tr.ring[pos-1]}"
-          tr.pos = pos
-          values = tr.ring[pos-1].last
-          yield p, values
+        if (cur_pos - next_ev.start) % total_dur <= WINDOW_SEC
+          update_state(p, next_ev.value)
+          enum.next
         end
       end
     end
 
-    def update_state(p, values)
-      logger.info("#{p} => #{values}")
-      values.each do |v|
-        @changed_params << p if v != @state[p]
-        @state[p] = v
-      end
+    def update_internal_structures
+      @new_sound_object_id = 0
+      @enums = @source.map { |k, v|
+        pat = v.p(@event_duration)
+        [k, [infinite_enum(pat), pat.total_duration]]
+      }.to_h
+      @must_forward = true
+    end
+
+    def do_gate_on
+      logger.info "Gate on: #{gate}"
+    end
+
+    def do_gate_off
+      logger.info "Gate off: #{gate}"
+    end
+
+    def do_state_change
+      logger.info "State change: #{@state.select { |k, v| @changed_params.include?(k) }.to_h}"
+    end
+
+    def update_state(p, v)
+      logger.debug "Update state of :#{p}: #{v}"
+      @changed_params << p if v != @state[p]
+      @state[p] = v
     end
 
     def state_changed?
       !@changed_params.empty?
     end
 
-    def apply_state_change
-      logger.info "Changed parameters: #{@changed_params.to_a}"
+    def gate_param_changed?
+      @changed_params.include?(gate)
     end
 
-    def params_timed_rings(params_pattern)
-      params_pattern.map { |p, pattern|
-        # Create timed ring for events
-        tr = TimedRing.new
-        tr.duration = pattern.total_duration
-
-        ring = Hash.new { |h, k| h[k] = [] }
-        pattern.each do |event|
-          ring[event.start] << event.value
-        end
-        tr.ring = ring.sort_by { |k, _| k }.to_a
-
-        [p, tr]
-      }.to_h
-    end
-
-    def gate_timed_rings(params_pattern, gate_param)
-      # Build Gate on and gate off timed rings
-      gate_on_tr = {}
-      gate_off_tr = {}
-      so_id = @new_sound_object_id
-
-      params_pattern.select { |p, _| p == gate_param }.each do |p, pattern|
-        # Create timed ring for events
-        tr_on = TimedRing.new
-        tr_off = TimedRing.new
-
-        tr_on.duration = pattern.total_duration
-        tr_off.duration = pattern.total_duration
-
-        h_on = Hash.new { |h, k| h[k] = [] }
-        h_off = Hash.new { |h, k| h[k] = [] }
-
-        pattern.each do |e|
-          h_on[e.start] << so_id
-          h_off[e.end] << so_id
-          so_id += 1
-        end
-
-        tr_on.ring = h_on.sort_by { |k, _| k }.to_a
-        tr_off.ring = h_off.sort_by { |k, _| k }.to_a
-
-        gate_on_tr[p] = tr_on
-        gate_off_tr[p] = tr_off
-      end
-
-      @new_sound_object_id = so_id
-
-      [gate_on_tr, gate_off_tr]
+    def infinite_enum(p)
+      Enumerator.new { |y| loop { p.each_event { |e| y << e } } }
     end
 
     def logger
