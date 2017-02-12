@@ -17,7 +17,7 @@ module Xi
         # @return [Pattern]
         #
         def series(start=0, step=1, length=inf)
-          Pattern.new(length) do |y|
+          Pattern.new(size: length) do |y|
             i = start
             loop_n(length) do
               y << i
@@ -42,7 +42,7 @@ module Xi
         # @return [Pattern]
         #
         def geom(start=0, grow=1, length=inf)
-          Pattern.new(length) do |y|
+          Pattern.new(size: length) do |y|
             i = start
             loop_n(length) do
               y << i
@@ -61,7 +61,7 @@ module Xi
         # @return [Pattern]
         #
         def rand(list, repeats=1)
-          Pattern.new(repeats) do |y|
+          Pattern.new(size: repeats) do |y|
             ls = list.to_a
             loop_n(repeats) { y << ls.sample }
           end
@@ -78,7 +78,7 @@ module Xi
         # @return [Pattern]
         #
         def xrand(list, repeats=1)
-          Pattern.new(repeats) do |y|
+          Pattern.new(size: repeats) do |y|
             ls = list.to_a
             xs = nil
             loop_n(repeats) do |i|
@@ -99,7 +99,7 @@ module Xi
         # @return [Pattern]
         #
         def shuf(list, repeats=1)
-          Pattern.new(list.size * repeats) do |y|
+          Pattern.new(size: list.size * repeats) do |y|
             xs = list.to_a.shuffle
             loop_n(repeats) do |i|
               xs.each { |x| y << x }
@@ -109,16 +109,16 @@ module Xi
 
         # TODO Document
         def sin(quant, dur=1)
-          Pattern.new(quant, dur: dur/quant) do |y|
-            event_dur = dur / quant
+          Pattern.new(size: quant, dur: dur / quant) do |y|
             quant.times do |i|
-              y << E[Math.sin(i/quant * 2 * Math::PI), i * event_dur, event_dur]
+              y << Math.sin(i / quant * 2 * Math::PI)
             end
           end
         end
 
+        # TODO Document
         def sin1(quant, dur=1)
-          sin(quant, dur).scale(-1, 1, 0, 1).p(dur/quant)
+          sin(quant, dur).scale(-1, 1, 0, 1)
         end
 
         private

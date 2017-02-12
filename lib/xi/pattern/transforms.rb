@@ -12,7 +12,7 @@ module Xi
       # @return [Pattern]
       #
       def -@
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:-@) ? -v : v) }
         end
       end
@@ -36,12 +36,12 @@ module Xi
       #
       def +(object)
         if object.is_a?(Pattern)
-          Pattern.new(size + object.size) do |y|
+          Pattern.new(self, size: size + object.size) do |y|
             each { |v| y << v }
             object.each { |v| y << v }
           end
         else
-          Pattern.new(size) do |y|
+          Pattern.new(self) do |y|
             each { |v| y << (v.respond_to?(:+) ? v + object : v) }
           end
         end
@@ -60,7 +60,7 @@ module Xi
       # @return [Pattern]
       #
       def -(numeric)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:-) ? v - numeric : v) }
         end
       end
@@ -78,7 +78,7 @@ module Xi
       # @return [Pattern]
       #
       def *(numeric)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:*) ? v * numeric : v) }
         end
       end
@@ -96,7 +96,7 @@ module Xi
       # @return [Pattern]
       #
       def /(numeric)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:/) ? v / numeric : v) }
         end
       end
@@ -114,7 +114,7 @@ module Xi
       # @return [Pattern]
       #
       def %(numeric)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:%) ? v % numeric : v) }
         end
       end
@@ -132,7 +132,7 @@ module Xi
       # @return [Pattern]
       #
       def **(numeric)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:**) ? v ** numeric : v) }
         end
       end
@@ -159,7 +159,7 @@ module Xi
           fail ArgumentError, "offset must be a non-negative Fixnum"
         end
 
-        Pattern.new(size * repeats) do |y|
+        Pattern.new(self, size: size * repeats) do |y|
           rep = repeats
 
           loop do
@@ -197,7 +197,7 @@ module Xi
       # @return [Pattern]
       #
       def bounce
-        Pattern.new(size * 2) do |y|
+        Pattern.new(self, size: size * 2) do |y|
           each { |v| y << v }
           reverse_each { |v| y << v }
         end
@@ -218,7 +218,7 @@ module Xi
       # @return [Pattern]
       #
       def normalize(min, max)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:-) ? (v - min) / (max - min) : v) }
         end
       end
@@ -240,7 +240,7 @@ module Xi
       # @return [Pattern]
       #
       def denormalize(min, max)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each { |v| y << (v.respond_to?(:*) ? (max - min) * v + min : v) }
         end
       end
@@ -262,14 +262,14 @@ module Xi
 
       # TODO Document
       def decelerate(num)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each_event { |e| y << E[e.value, e.start * num, e.duration * num] }
         end
       end
 
       # TODO Document
       def accelerate(num)
-        Pattern.new(size) do |y|
+        Pattern.new(self) do |y|
           each_event { |e| y << E[e.value, e.start / num, e.duration / num] }
         end
       end
@@ -279,7 +279,7 @@ module Xi
       #
       def sometimes(probability=0.5)
         prob_pat = probability.p
-        Pattern.new(size * prob_pat.size) do |y|
+        Pattern.new(self, size: size * prob_pat.size) do |y|
           prob_pat.each do |prob|
             each { |v| y << (rand < prob ? v : nil) }
           end
@@ -291,7 +291,7 @@ module Xi
       #
       def repeat_each(times)
         times_pat = times.p
-        Pattern.new(size * times_pat.size) do |y|
+        Pattern.new(self, size: size * times_pat.size) do |y|
           times_pat.each do |t|
             each { |v| t.times { y << v } }
           end
