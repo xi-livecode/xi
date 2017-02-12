@@ -16,19 +16,16 @@ module Xi
       self.clock = clock
     end
 
-    def set(source, event_duration: nil, gate: nil)
+    def set(event_duration: nil, gate: nil, **source)
       @source = source
       @gate = gate if gate
       @event_duration = event_duration if event_duration
 
-      update_internal_structures
-      play
+      #update_internal_structures
+      #play
       self
     end
-
-    def <<(source)
-      set(source)
-    end
+    alias_method :<<, :set
 
     def event_duration=(new_value)
       @event_duration = new_value
