@@ -7,6 +7,7 @@ module Xi
     attr_reader :clock, :source, :source_patterns, :state, :event_duration, :gate
 
     def initialize(clock)
+      @mutex = Mutex.new
       @playing = false
       @state = {}
       @new_sound_object_id = 0
@@ -16,25 +17,29 @@ module Xi
     end
 
     def set(event_duration: nil, gate: nil, **source)
-      @source = source
-      @gate = gate if gate
-      @event_duration = event_duration if event_duration
-
-      update_internal_structures
+      @mutex.synchronize do
+        @source = source
+        @gate = gate if gate
+        @event_duration = event_duration if event_duration
+        update_internal_structures
+      end
       play
-
       self
     end
     alias_method :<<, :set
 
     def event_duration=(new_value)
-      @event_duration = new_value
-      update_internal_structures
+      @mutex.synchronize do
+        @event_duration = new_value
+        update_internal_structures
+      end
     end
 
     def gate=(new_value)
-      @gate = new_value
-      update_internal_structures
+      @mutex.synchronize do
+        @gate = new_value
+        update_internal_structures
+      end
     end
 
     def clock=(new_clock)
@@ -44,7 +49,7 @@ module Xi
     end
 
     def playing?
-      @playing
+      @mutex.synchronize { @playing }
     end
 
     def stopped?
@@ -52,16 +57,20 @@ module Xi
     end
 
     def play
-      @playing = true
-      @clock.subscribe(self)
+      @mutex.synchronize do
+        @playing = true
+        @clock.subscribe(self)
+      end
       self
     end
     alias_method :start, :play
 
     def stop
-      @playing = false
-      @state.clear
-      @clock.unsubscribe(self)
+      @mutex.synchronize do
+        @playing = false
+        @state.clear
+        @clock.unsubscribe(self)
+      end
       self
     end
     alias_method :pause, :play
@@ -75,15 +84,17 @@ module Xi
     def notify(now)
       return unless playing? && @source
 
-      @changed_params.clear
+      @mutex.synchronize do
+        @changed_params.clear
 
-      forward_enums(now) if @must_forward
+        forward_enums(now) if @must_forward
 
-      gate_on, gate_off = play_enums(now)
+        gate_on, gate_off = play_enums(now)
 
-      do_gate_off_change(gate_off) unless gate_off.empty?
-      do_state_change if state_changed?
-      do_gate_on_change(gate_on) unless gate_on.empty?
+        do_gate_off_change(gate_off) unless gate_off.empty?
+        do_state_change if state_changed?
+        do_gate_on_change(gate_on) unless gate_on.empty?
+      end
     end
 
     private
