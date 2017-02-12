@@ -13,11 +13,11 @@ module Xi
         #
         # @param start [Numeric] (default: 0)
         # @param step [Numeric] (default: 1)
-        # @param length [Numeric, Symbol] number or :inf (default: :inf)
+        # @param length [Numeric, Symbol] number or inf (default: inf)
         # @return [Pattern]
         #
-        def series(start=0, step=1, length=:inf)
-          Pattern.new do |y|
+        def series(start=0, step=1, length=inf)
+          Pattern.new(length) do |y|
             i = start
             loop_n(length) do
               y << i
@@ -38,11 +38,11 @@ module Xi
         #
         # @param start [Numeric] (default: 0)
         # @param grow [Numeric] (default: 1)
-        # @param length [Numeric, Symbol] number or :inf (default: :inf)
+        # @param length [Numeric, Symbol] number or inf (default: inf)
         # @return [Pattern]
         #
-        def geom(start=0, grow=1, length=:inf)
-          Pattern.new do |y|
+        def geom(start=0, grow=1, length=inf)
+          Pattern.new(length) do |y|
             i = start
             loop_n(length) do
               y << i
@@ -57,11 +57,11 @@ module Xi
         #   peek [1, 2, 3].p.rand             #=> [2]
         #   peek [1, 2, 3, 4].p.rand(6)       #=> [1, 3, 2, 2, 4, 3]
         #
-        # @param repeats [Fixnum, Symbol] number or :inf (default: 1)
+        # @param repeats [Fixnum, Symbol] number or inf (default: 1)
         # @return [Pattern]
         #
         def rand(list, repeats=1)
-          Pattern.new do |y|
+          Pattern.new(repeats) do |y|
             ls = list.to_a
             loop_n(repeats) { y << ls.sample }
           end
@@ -74,11 +74,11 @@ module Xi
         #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
         #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
         #
-        # @param repeats [Fixnum, Symbol] number or :inf (default: 1)
+        # @param repeats [Fixnum, Symbol] number or inf (default: 1)
         # @return [Pattern]
         #
         def xrand(list, repeats=1)
-          Pattern.new do |y|
+          Pattern.new(repeats) do |y|
             ls = list.to_a
             xs = nil
             loop_n(repeats) do |i|
@@ -95,11 +95,11 @@ module Xi
         #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
         #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
         #
-        # @param repeats [Fixnum, Symbol] number or :inf (default: 1)
+        # @param repeats [Fixnum, Symbol] number or inf (default: 1)
         # @return [Pattern]
         #
         def shuf(list, repeats=1)
-          Pattern.new do |y|
+          Pattern.new(list.size * repeats) do |y|
             xs = list.to_a.shuffle
             loop_n(repeats) do |i|
               xs.each { |x| y << x }
@@ -112,7 +112,7 @@ module Xi
         def loop_n(length)
           i = 0
           loop do
-            break if length != :inf && i == length
+            break if length != inf && i == length
             yield i
             i += 1
           end

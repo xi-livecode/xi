@@ -12,7 +12,7 @@ module Xi
       # @return [Pattern]
       #
       def -@
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:-@) ? -v : v) }
         end
       end
@@ -36,12 +36,12 @@ module Xi
       #
       def +(object)
         if object.is_a?(Pattern)
-          Pattern.new do |y|
+          Pattern.new(size + object.size) do |y|
             each { |v| y << v }
             object.each { |v| y << v }
           end
         else
-          Pattern.new do |y|
+          Pattern.new(size) do |y|
             each { |v| y << (v.respond_to?(:+) ? v + object : v) }
           end
         end
@@ -60,7 +60,7 @@ module Xi
       # @return [Pattern]
       #
       def -(numeric)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:-) ? v - numeric : v) }
         end
       end
@@ -78,7 +78,7 @@ module Xi
       # @return [Pattern]
       #
       def *(numeric)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:*) ? v * numeric : v) }
         end
       end
@@ -96,7 +96,7 @@ module Xi
       # @return [Pattern]
       #
       def /(numeric)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:/) ? v / numeric : v) }
         end
       end
@@ -114,7 +114,7 @@ module Xi
       # @return [Pattern]
       #
       def %(numeric)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:%) ? v % numeric : v) }
         end
       end
@@ -132,7 +132,7 @@ module Xi
       # @return [Pattern]
       #
       def **(numeric)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:**) ? v ** numeric : v) }
         end
       end
@@ -145,25 +145,25 @@ module Xi
       #   peek [1, 2, 3].p.seq(2)           #=> [1, 2, 3, 1, 2, 3]
       #   peek [1, 2, 3].p.seq(1, 1)        #=> [2, 3, 1]
       #   peek [1, 2, 3].p.seq(2, 2)        #=> [3, 2, 1, 3, 2, 1]
-      #   peek [1, 2].p.seq(:inf, 1)        #=> [2, 1, 2, 1, 2, 1, 2, 1, 2, 1]
+      #   peek [1, 2].p.seq(inf, 1)         #=> [2, 1, 2, 1, 2, 1, 2, 1, 2, 1]
       #
-      # @param repeats [Fixnum, Symbol] number or :inf (defaut: 1)
+      # @param repeats [Fixnum, Symbol] number or inf (defaut: 1)
       # @param offset [Fixnum] (default: 0)
       # @return [Pattern]
       #
       def seq(repeats=1, offset=0)
-        unless (repeats.is_a?(Fixnum) && repeats >= 0) || repeats == :inf
-          fail ArgumentError, "repeats must be a non-negative Fixnum or :inf"
+        unless (repeats.is_a?(Fixnum) && repeats >= 0) || repeats == inf
+          fail ArgumentError, "repeats must be a non-negative Fixnum or inf"
         end
         unless offset.is_a?(Fixnum) && offset >= 0
           fail ArgumentError, "offset must be a non-negative Fixnum"
         end
 
-        Pattern.new do |y|
+        Pattern.new(size * repeats) do |y|
           rep = repeats
 
           loop do
-            if rep != :inf
+            if rep != inf
               rep -= 1
               break if rep < 0
             end
@@ -197,7 +197,7 @@ module Xi
       # @return [Pattern]
       #
       def bounce
-        Pattern.new do |y|
+        Pattern.new(size * 2) do |y|
           each { |v| y << v }
           reverse_each { |v| y << v }
         end
@@ -218,7 +218,7 @@ module Xi
       # @return [Pattern]
       #
       def normalize(min, max)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:-) ? (v - min) / (max - min) : v) }
         end
       end
@@ -240,7 +240,7 @@ module Xi
       # @return [Pattern]
       #
       def denormalize(min, max)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each { |v| y << (v.respond_to?(:*) ? (max - min) * v + min : v) }
         end
       end
@@ -262,14 +262,14 @@ module Xi
 
       # TODO Document
       def decelerate(num)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each_event { |e| y << E[e.value, e.start * num, e.duration * num] }
         end
       end
 
       # TODO Document
       def accelerate(num)
-        Pattern.new do |y|
+        Pattern.new(size) do |y|
           each_event { |e| y << E[e.value, e.start / num, e.duration / num] }
         end
       end
@@ -278,8 +278,9 @@ module Xi
       # TODO Document
       #
       def sometimes(probability=0.5)
-        Pattern.new do |y|
-          probability.p.each do |prob|
+        prob_pat = probability.p
+        Pattern.new(size * prob_pat.size) do |y|
+          prob_pat.each do |prob|
             each { |v| y << (rand < prob ? v : nil) }
           end
         end
@@ -289,8 +290,9 @@ module Xi
       # TODO Document
       #
       def repeat_each(times)
-        Pattern.new do |y|
-          times.p.each do |t|
+        times_pat = times.p
+        Pattern.new(size * times_pat.size) do |y|
+          times_pat.each do |t|
             each { |v| t.times { y << v } }
           end
         end

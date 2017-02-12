@@ -45,6 +45,10 @@ module Xi
       @is_infinite
     end
 
+    def finite?
+      !infinite?
+    end
+
     def ==(o)
       self.class == o.class &&
         source == o.source &&
