@@ -107,6 +107,16 @@ module Xi
           end
         end
 
+        # TODO Document
+        def sin(quant, dur=1)
+          Pattern.new(quant) do |y|
+            event_dur = dur / quant
+            quant.times do |i|
+              y << E[Math.sin(i/quant * 2 * Math::PI), i * event_dur, event_dur]
+            end
+          end
+        end
+
         private
 
         def loop_n(length)
