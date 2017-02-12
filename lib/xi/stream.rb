@@ -26,6 +26,10 @@ module Xi
       self
     end
 
+    def <<(source)
+      set(source)
+    end
+
     def event_duration=(new_value)
       @event_duration = new_value
       update_internal_structures
