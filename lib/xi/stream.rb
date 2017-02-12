@@ -99,6 +99,10 @@ module Xi
 
     private
 
+    def changed_state
+      @state.select { |k, _| @changed_params.include?(k) }
+    end
+
     def forward_enums(now)
       @enums.each do |p, (enum, total_dur)|
         cur_pos = now % total_dur
