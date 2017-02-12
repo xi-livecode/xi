@@ -71,7 +71,7 @@ module Xi
 
     def inspect
       ss = if @source.respond_to?(:join)
-             @source.join(', ')
+             @source.map(&:inspect).join(', ')
            elsif @source.is_a?(Enumerator)
              "?enum"
            else
