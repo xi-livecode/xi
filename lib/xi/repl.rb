@@ -41,15 +41,6 @@ module Xi
         end
         puts "(⌣_⌣”) There were more errors..." if more_errors
       end
-
-      Signal.trap("INT") { breakpoint }
-    end
-
-    def breakpoint
-      puts "\nPress Ctrl+C again to terminate."
-      res = STDIN.getch
-      exit if res == "\u0003"
-      puts res
     end
 
     def load_init_script
