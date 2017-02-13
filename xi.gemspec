@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'xi/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "xi"
+  spec.name          = "xi-lang"
   spec.version       = Xi::VERSION
   spec.authors       = ["Damián Silvani"]
   spec.email         = ["munshkr@gmail.com"]
