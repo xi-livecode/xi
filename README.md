@@ -9,6 +9,21 @@ Xi is only a patterns library, but can talk to different backends:
 - [SuperCollider](https://github.com/supercollider/supercollider)
 - MIDI devices
 
+## Example
+
+```ruby
+k = MIDI::Stream.new
+
+k.set degree: [0, 3, 5, 7],
+      octave: [1, 2],
+      scale: [Scale.egyptian],
+      voice: (0..6).p.scale(0, 6, 0, 127),
+      vel: [30, 25, 20].p + 20,
+      cutoff: P.sin1(32, 2) * 128,
+      delay_feedback: 1/2 * 128,
+      delay_time: [0, 0x7f].p(1/16)
+```
+
 ## Installation
 
 You will need Ruby 2.1+ installed on your system.  Check by running `ruby
