@@ -182,9 +182,11 @@ module Xi
     end
 
     def update_state(p, v)
-      logger.debug "Update state of :#{p}: #{v}"
-      @changed_params << p if v != @state[p]
-      @state[p] = v
+      if v != @state[p]
+        logger.debug "Update state of :#{p}: #{v}"
+        @changed_params << p
+        @state[p] = v
+      end
     end
 
     def state_changed?
