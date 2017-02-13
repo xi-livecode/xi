@@ -35,10 +35,6 @@ You will need Ruby 2.1+ installed on your system.  Check by running `ruby
 -v`.  To install Xi you must install the core libraries and REPL, and then one
 or more backends.
 
-There is a configuration file that is written automatically for you when run
-for the first time at `~/.config/xi/init.rb`. You can add require lines and
-define all the function helpers you want.
-
 If you want to use Xi with SuperCollider:
 
     $ gem install xi-lang xi-supercollider
@@ -50,6 +46,12 @@ Or with MIDI:
 Then run Xi REPL with:
 
     $ xi
+
+There is a configuration file that is written automatically for you when run
+for the first time at `~/.config/xi/init.rb`. You can add require lines and
+define all the function helpers you want.
+
+### Repository
 
 Becase Xi is still in **alpha** stage, you might want to clone the repository
 using Git instead:
