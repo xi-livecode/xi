@@ -17,7 +17,7 @@ You will need Ruby 2.1+ installed on your system.  Check by running `ruby
 Becase Xi is still in **alpha** stage, you will have to checkout this
 repository using Git:
 
-    $ git clone https://github.com/munshkr/xi
+    $ git clone https://github.com/xi-livecode/xi
 
 After that, change into the new directory and install gem dependencies with
 Bundler:
@@ -41,9 +41,9 @@ git commits and tags, and push the `.gem` file to
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at
-https://github.com/munshkr/xi. This project is intended to be a safe, welcoming
-space for collaboration, and contributors are expected to adhere to the
-[Contributor Covenant](http://contributor-covenant.org) code of conduct.
+https://github.com/xi-livecode/xi. This project is intended to be a safe,
+welcoming space for collaboration, and contributors are expected to adhere to
+the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
