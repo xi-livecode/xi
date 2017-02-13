@@ -9,6 +9,9 @@ Xi is only a patterns library, but can talk to different backends:
 - [SuperCollider](https://github.com/supercollider/supercollider)
 - MIDI devices
 
+*NOTE*: Be advised that this project is in very early alpha stages. There are a
+multiple known bugs, missing features, documentation and tests.
+
 ## Example
 
 ```ruby
@@ -26,16 +29,36 @@ k.set degree: [0, 3, 5, 7],
 
 ## Installation
 
-You will need Ruby 2.1+ installed on your system.  Check by running `ruby
--v`.  You will also need Bundler.  Install with `gem install bundler`.
+### Quickstart
 
-Becase Xi is still in **alpha** stage, you will have to checkout this
-repository using Git:
+You will need Ruby 2.1+ installed on your system.  Check by running `ruby
+-v`.  To install Xi you must install the core libraries and REPL, and then one
+or more backends.
+
+There is a configuration file that is written automatically for you when run
+for the first time at `~/.config/xi/init.rb`. You can add require lines and
+define all the function helpers you want.
+
+If you want to use Xi with SuperCollider:
+
+    $ gem install xi-lang xi-supercollider
+
+Or with MIDI:
+
+    $ gem install xi-lang xi-midi
+
+Then run Xi REPL with:
+
+    $ xi
+
+Becase Xi is still in **alpha** stage, you might want to clone the repository
+using Git instead:
 
     $ git clone https://github.com/xi-livecode/xi
 
 After that, change into the new directory and install gem dependencies with
-Bundler:
+Bundler.  If you don't have Bundler installed, run `gem install bundler` first.
+Then:
 
     $ cd xi
     $ bundle install
