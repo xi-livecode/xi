@@ -41,6 +41,10 @@ module Xi
       !playing?
     end
 
+    def now
+      Time.now.to_f * cps
+    end
+
     def play
       @mutex.synchronize { @playing = true }
       self

@@ -122,22 +122,32 @@ module Xi
       gate_off = []
       gate_on = []
 
+      @base_ts ||= now
+
       @enums.each do |p, (enum, total_dur)|
-        cur_pos = now % total_dur
+        # Position inside pattern from the moment stream was set.
+        p_pos = (@base_ts % total_dur)
+
+        # Current position of looping pattern relative to
+        # the moment stream was set.
+        cur_pos = now - (@base_ts - p_pos)
+
         next_ev = enum.peek
 
         # Check if there are any currently playing sound objects that
         # must be gated off
         @playing_sound_objects.dup.each do |end_pos, so_ids|
-          if (cur_pos - end_pos) % total_dur <= WINDOW_SEC
+          if cur_pos >= end_pos - WINDOW_SEC
+            # TODO: Store exact time of gate off, besides sound object ids
             gate_off = so_ids
             @playing_sound_objects.delete(end_pos)
           end
         end
 
         # Do we need to play next event now? If not, skip this parameter
-        if (cur_pos - next_ev.start) % total_dur <= WINDOW_SEC
+        if cur_pos >= next_ev.start - WINDOW_SEC
           # Update state based on pattern value
+          # TODO: Pass as parameter exact time
           update_state(p, next_ev.value)
 
           # If this parameter is a gate, mark it as gate on as
@@ -148,6 +158,7 @@ module Xi
               @new_sound_object_id += 1
               so_id
             end
+            # TODO: Store exact time of gate on, besides sound object ids
             gate_on = new_so_ids
             @playing_sound_objects[next_ev.end] = new_so_ids
           end
@@ -162,10 +173,11 @@ module Xi
 
     def update_internal_structures
       @playing_sound_objects ||= {}
+      @base_ts = @clock.now
       @must_forward = true
       @enums = @source.map { |k, v|
         pat = v.p(@event_duration)
-        [k, [infinite_enum(pat), pat.total_duration]]
+        [k, [pat.seq(inf).each_event, pat.total_duration]]
       }.to_h
     end
 
@@ -191,10 +203,6 @@ module Xi
 
     def state_changed?
       !@changed_params.empty?
-    end
-
-    def infinite_enum(p)
-      Enumerator.new { |y| loop { p.each_event { |e| y << e } } }
     end
 
     def logger
