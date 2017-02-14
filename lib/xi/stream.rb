@@ -2,8 +2,6 @@ require 'set'
 
 module Xi
   class Stream
-    WINDOW_SEC = 0.05
-
     attr_reader :clock, :source, :source_patterns, :state, :event_duration, :gate
 
     def initialize(clock)
@@ -12,6 +10,7 @@ module Xi
       @state = {}
       @new_sound_object_id = 0
       @changed_params = [].to_set
+      @playing_sound_objects = {}
 
       self.clock = clock
     end
@@ -92,8 +91,8 @@ module Xi
         gate_on, gate_off = play_enums(now)
 
         do_gate_off_change(gate_off) unless gate_off.empty?
-        do_state_change if state_changed?
         do_gate_on_change(gate_on) unless gate_on.empty?
+        do_state_change if state_changed?
       end
     end
 
@@ -122,32 +121,26 @@ module Xi
       gate_off = []
       gate_on = []
 
-      @base_ts ||= now
-
       @enums.each do |p, (enum, total_dur)|
-        # Position inside pattern from the moment stream was set.
-        p_pos = (@base_ts % total_dur)
-
-        # Current position of looping pattern relative to
-        # the moment stream was set.
-        cur_pos = now - (@base_ts - p_pos)
+        start_ts = @base_ts - (@base_ts % total_dur)
+        cur_pos = now - start_ts
 
         next_ev = enum.peek
 
         # Check if there are any currently playing sound objects that
         # must be gated off
-        @playing_sound_objects.dup.each do |end_pos, so_ids|
-          if cur_pos >= end_pos - WINDOW_SEC
-            # TODO: Store exact time of gate off, besides sound object ids
-            gate_off = so_ids
+        @playing_sound_objects.dup.each do |end_pos, h|
+          if cur_pos >= end_pos - latency_sec
+            gate_off << {so_ids: h[:so_ids],
+                         at: @clock.at(start_ts + end_pos)}
             @playing_sound_objects.delete(end_pos)
           end
         end
 
         # Do we need to play next event now? If not, skip this parameter
-        if cur_pos >= next_ev.start - WINDOW_SEC
+        if cur_pos >= next_ev.start - latency_sec
           # Update state based on pattern value
-          # TODO: Pass as parameter exact time
+          # TODO: Pass as parameter exact time (start_ts + next_ev.start)
           update_state(p, next_ev.value)
 
           # If this parameter is a gate, mark it as gate on as
@@ -158,9 +151,10 @@ module Xi
               @new_sound_object_id += 1
               so_id
             end
-            # TODO: Store exact time of gate on, besides sound object ids
-            gate_on = new_so_ids
-            @playing_sound_objects[next_ev.end] = new_so_ids
+            gate_on << {so_ids: new_so_ids,
+                        at: @clock.at(start_ts + next_ev.start)}
+            @playing_sound_objects[next_ev.end] = {so_ids: new_so_ids,
+                                                   duration: total_dur}
           end
 
           # Because we already processed event, advance enumerator
@@ -172,7 +166,11 @@ module Xi
     end
 
     def update_internal_structures
-      @playing_sound_objects ||= {}
+      # Replace absolute offsets for relative offsets because enums are going
+      # to be reset.
+      @playing_sound_objects = @playing_sound_objects
+        .map { |end_pos, h| [end_pos % h[:duration], h] }.to_h
+
       @base_ts = @clock.now
       @must_forward = true
       @enums = @source.map { |k, v|
@@ -203,6 +201,10 @@ module Xi
 
     def state_changed?
       !@changed_params.empty?
+    end
+
+    def latency_sec
+      0.05
     end
 
     def logger

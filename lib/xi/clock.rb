@@ -57,6 +57,14 @@ module Xi
     end
     alias_method :pause, :play
 
+    def seconds_per_cycle
+      @mutex.synchronize { 1.0 / @cps }
+    end
+
+    def at(cycle_pos)
+      Time.at(cycle_pos * seconds_per_cycle)
+    end
+
     def inspect
       "#<#{self.class.name}:#{"0x%014x" % object_id} cps=#{cps.inspect} #{playing? ? :playing : :stopped}>"
     end
