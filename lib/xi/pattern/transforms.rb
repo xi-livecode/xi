@@ -12,9 +12,12 @@ module Xi
       # @return [Pattern]
       #
       def -@
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:-@) ? -v : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:-@) ? -v : v), e.start, e.duration]
+          }
+        }
       end
 
       # Concatenate +object+ pattern or perform a scalar sum with +object+
@@ -36,14 +39,17 @@ module Xi
       #
       def +(object)
         if object.is_a?(Pattern)
-          Pattern.new(self, size: size + object.size) do |y|
+          Pattern.new(self, size: size + object.size) { |y|
             each { |v| y << v }
             object.each { |v| y << v }
-          end
+          }
         else
-          Pattern.new(self) do |y|
-            each { |v| y << (v.respond_to?(:+) ? v + object : v) }
-          end
+          Pattern.new(self) { |y|
+            each_event { |e|
+              v = e.value
+              y << E[(v.respond_to?(:+) ? v + object : v), e.start, e.duration]
+            }
+          }
         end
       end
 
@@ -60,9 +66,12 @@ module Xi
       # @return [Pattern]
       #
       def -(numeric)
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:-) ? v - numeric : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:-) ? v - numeric : v), e.start, e.duration]
+          }
+        }
       end
 
       # Performs a scalar multiplication with +numeric+
@@ -78,9 +87,12 @@ module Xi
       # @return [Pattern]
       #
       def *(numeric)
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:*) ? v * numeric : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:*) ? v * numeric : v), e.start, e.duration]
+          }
+        }
       end
 
       # Performs a scalar division by +numeric+
@@ -96,9 +108,12 @@ module Xi
       # @return [Pattern]
       #
       def /(numeric)
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:/) ? v / numeric : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:/) ? v / numeric : v), e.start, e.duration]
+          }
+        }
       end
 
       # Performs a scalar modulo against +numeric+
@@ -114,9 +129,12 @@ module Xi
       # @return [Pattern]
       #
       def %(numeric)
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:%) ? v % numeric : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:%) ? v % numeric : v), e.start, e.duration]
+          }
+        }
       end
 
       # Raises each value to the power of +numeric+, which may be negative or
@@ -132,9 +150,12 @@ module Xi
       # @return [Pattern]
       #
       def **(numeric)
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:**) ? v ** numeric : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:**) ? v ** numeric : v), e.start, e.duration]
+          }
+        }
       end
       alias_method :^, :**
 
@@ -218,9 +239,12 @@ module Xi
       # @return [Pattern]
       #
       def normalize(min, max)
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:-) ? (v - min) / (max - min) : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:-) ? (v - min) / (max - min) : v), e.start, e.duration]
+          }
+        }
       end
 
       # Scales a pattern of normalized values (0..1) to a custom range
@@ -240,9 +264,12 @@ module Xi
       # @return [Pattern]
       #
       def denormalize(min, max)
-        Pattern.new(self) do |y|
-          each { |v| y << (v.respond_to?(:*) ? (max - min) * v + min : v) }
-        end
+        Pattern.new(self) { |y|
+          each_event { |e|
+            v = e.value
+            y << E[(v.respond_to?(:*) ? (max - min) * v + min : v), e.start, e.duration]
+          }
+        }
       end
 
       # Scale from one range of values to another range of values
@@ -262,16 +289,16 @@ module Xi
 
       # TODO Document
       def decelerate(num)
-        Pattern.new(self) do |y|
+        Pattern.new(self) { |y|
           each_event { |e| y << E[e.value, e.start * num, e.duration * num] }
-        end
+        }
       end
 
       # TODO Document
       def accelerate(num)
-        Pattern.new(self) do |y|
+        Pattern.new(self) { |y|
           each_event { |e| y << E[e.value, e.start / num, e.duration / num] }
-        end
+        }
       end
 
       # Based on +probability+, it yields original value or nil
