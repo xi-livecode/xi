@@ -109,14 +109,14 @@ module Xi
         cur_pos = now % total_dur
         start_pos = now - cur_pos
 
-        next_ev = enum.peek
+        loop do
+          next_ev = enum.peek
+          distance = (cur_pos - next_ev.start) % total_dur
 
-        while distance = (cur_pos - next_ev.start) % total_dur do
-          enum.next
           @prev_end[p] = start_pos + next_ev.end
+          enum.next
 
           break if distance <= next_ev.duration
-          next_ev = enum.peek
         end
       end
 
