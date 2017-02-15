@@ -16,24 +16,26 @@ module Xi
 
     def_delegators :@source, :size
 
-    def initialize(enum=nil, size: nil, **metadata)
-      size ||= enum.size if enum.respond_to?(:size)
+    def initialize(source=nil, size: nil, **metadata)
+      if source.nil? && !block_given?
+        fail ArgumentError, 'must provide source or block'
+      end
+
+      size ||= source.size if source.respond_to?(:size)
 
       @source = if block_given?
         Enumerator.new(size) { |y| yield y }
-      elsif enum
-        enum
       else
-        fail ArgumentError, 'must provide source or block'
+        source
       end
 
       @is_infinite = @source.size.nil? || @source.size == Float::INFINITY
 
       @event_duration = metadata.delete(:dur) || metadata.delete(:event_duration)
-      @event_duration ||= enum.event_duration if enum.respond_to?(:event_duration)
+      @event_duration ||= source.event_duration if source.respond_to?(:event_duration)
       @event_duration ||= 1
 
-      @metadata = enum.respond_to?(:metadata) ? enum.metadata : {}
+      @metadata = source.respond_to?(:metadata) ? source.metadata : {}
       @metadata.merge!(metadata)
 
       if @is_infinite
