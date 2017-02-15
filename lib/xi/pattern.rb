@@ -65,7 +65,7 @@ module Xi
 
     def p(dur=nil, **metadata)
       Pattern.new(@source, dur: dur || @event_duration,
-                  **@metadata.merge(metadata))
+                  size: size, **@metadata.merge(metadata))
     end
 
     def each_event
@@ -114,19 +114,19 @@ module Xi
 
     def map_events
       return enum_for(__method__) unless block_given?
-      Pattern.new(dur: dur, **metadata) { |y| each_event { |e| y << yield(e) } }
+      Pattern.new(self) { |y| each_event { |e| y << yield(e) } }
     end
     alias_method :collect_events, :map_events
 
     def select_events
       return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each_event { |e| y << e if yield(e) } }
+      Pattern.new(self) { |y| each_event { |e| y << e if yield(e) } }
     end
     alias_method :find_all_events, :select_events
 
     def reject_events
       return enum_for(__method__) unless block_given?
-      Pattern.new { |y| each_event { |e| y << e unless yield(e) } }
+      Pattern.new(self) { |y| each_event { |e| y << e unless yield(e) } }
     end
 
     def to_events
