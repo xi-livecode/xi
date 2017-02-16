@@ -106,6 +106,8 @@ module Xi
 
     def forward_enums(now)
       @enums.each do |p, (enum, total_dur)|
+        next if total_dur == 0
+
         cur_pos = now % total_dur
         start_pos = now - cur_pos
 
@@ -128,6 +130,8 @@ module Xi
       gate_on = []
 
       @enums.each do |p, (enum, total_dur)|
+        next if total_dur == 0
+
         cur_pos = now % total_dur
         start_pos = now - cur_pos
 
