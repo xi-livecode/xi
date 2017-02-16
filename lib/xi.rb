@@ -43,8 +43,13 @@ module Xi
     def method_missing(method, backend=nil, **params)
       backend ||= Xi.default_backend
 
+      if !backend.is_a?(String) && !backend.is_a?(Symbol)
+        fail ArgumentError, "invalid backend '#{backend}'"
+      end
+
       @streams ||= {}
       @streams[backend] ||= {}
+
       s = @streams[backend][method] ||= begin
         cls = if backend
           require "xi/#{backend}"
@@ -54,7 +59,12 @@ module Xi
         end
         cls.new(method, self.clock)
       end
+
       s.set(s: method, **params) unless params.empty?
+
+      b = Pry.binding_for(self)
+      b.local_variable_set(method, s)
+
       s
     end
   end
