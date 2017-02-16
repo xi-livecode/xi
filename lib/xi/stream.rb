@@ -22,6 +22,7 @@ module Xi
 
     def set(event_duration: nil, gate: nil, **source)
       @mutex.synchronize do
+        source[:s] ||= @name
         @source = source
         @gate = gate if gate
         @event_duration = event_duration if event_duration
@@ -92,11 +93,10 @@ module Xi
         @changed_params.clear
 
         forward_enums(now) if @must_forward
+        gate_off = gate_off_old_sound_objects(now)
+        gate_on = play_enums(now)
 
-        gate_on, gate_off = play_enums(now)
-
-        transform_state
-
+        # Call hooks
         do_gate_off_change(gate_off) unless gate_off.empty?
         do_state_change if state_changed?
         do_gate_on_change(gate_on) unless gate_on.empty?
@@ -130,8 +130,22 @@ module Xi
       @must_forward = false
     end
 
-    def play_enums(now)
+    def gate_off_old_sound_objects(now)
       gate_off = []
+
+      # Check if there are any currently playing sound objects that
+      # must be gated off
+      @playing_sound_objects.dup.each do |end_pos, h|
+        if now >= h[:at] - latency_sec
+          gate_off << h
+          @playing_sound_objects.delete(end_pos)
+        end
+      end
+
+      gate_off
+    end
+
+    def play_enums(now)
       gate_on = []
 
       @enums.each do |p, (enum, total_dur)|
@@ -139,15 +153,6 @@ module Xi
 
         cur_pos = now % total_dur
         start_pos = now - cur_pos
-
-        # Check if there are any currently playing sound objects that
-        # must be gated off
-        @playing_sound_objects.dup.each do |end_pos, h|
-          if now >= h[:at] - latency_sec
-            gate_off << h
-            @playing_sound_objects.delete(end_pos)
-          end
-        end
 
         next_ev = enum.peek
 
@@ -157,9 +162,9 @@ module Xi
           # Update state based on pattern value
           # TODO: Pass as parameter exact time (start_ts + next_ev.start)
           update_state(p, next_ev.value)
+          transform_state
 
-          # If this parameter is a gate, mark it as gate on as
-          # a new sound object
+          # If a gate parameter changed, create a new sound object
           if p == @gate
             new_so_ids = Array(next_ev.value)
               .size.times.map { new_sound_object_id }
@@ -182,7 +187,7 @@ module Xi
         end
       end
 
-      [gate_on, gate_off]
+      gate_on
     end
 
     # @override
