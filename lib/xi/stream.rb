@@ -4,7 +4,8 @@ module Xi
   class Stream
     attr_reader :clock, :source, :source_patterns, :state, :event_duration, :gate
 
-    def initialize(clock)
+    def initialize(name, clock)
+      @name = name.to_sym
       @mutex = Mutex.new
       @playing = false
       @last_sound_object_id = 0
@@ -26,7 +27,6 @@ module Xi
       play
       self
     end
-    alias_method :<<, :set
 
     def event_duration=(new_value)
       @mutex.synchronize do
@@ -76,8 +76,8 @@ module Xi
     alias_method :pause, :play
 
     def inspect
-      "#<#{self.class.name}:#{"0x%014x" % object_id} " \
-        "clock=#{@clock.inspect} #{playing? ? :playing : :stopped}>"
+      "#<#{self.class.name} :#{@name} " \
+        "#{playing? ? :playing : :stopped} at #{@clock.cps} cps>"
     rescue => err
       logger.error(err)
     end
