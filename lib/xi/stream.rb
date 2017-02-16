@@ -31,6 +31,7 @@ module Xi
       play
       self
     end
+    alias_method :call, :set
 
     def event_duration=(new_value)
       @mutex.synchronize do
