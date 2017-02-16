@@ -321,7 +321,12 @@ module Xi
       #
       def sometimes(probability=0.5)
         prob_pat = probability.p
-        Pattern.new(self, size: size * prob_pat.size) do |y|
+
+        if times_pat.infinite?
+          fail ArgumentError, 'times must be a finite pattern'
+        end
+
+        Pattern.new(self, size: size * prob_pat.reduce(:+)) do |y|
           prob_pat.each do |prob|
             each { |v| y << (rand < prob ? v : nil) }
           end
@@ -333,7 +338,12 @@ module Xi
       #
       def repeat_each(times)
         times_pat = times.p
-        Pattern.new(self, size: size * times_pat.size) do |y|
+
+        if times_pat.infinite?
+          fail ArgumentError, 'times must be a finite pattern'
+        end
+
+        Pattern.new(self, size: size * times_pat.reduce(:+)) do |y|
           times_pat.each do |t|
             each { |v| t.times { y << v } }
           end
