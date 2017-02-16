@@ -7,7 +7,7 @@ Thread.abort_on_exception = true
 module Xi
   class Clock
     DEFAULT_CPS  = 1.0
-    INTERVAL_SEC = 20 / 1000.0
+    INTERVAL_SEC = 10 / 1000.0
 
     def initialize(cps: DEFAULT_CPS)
       @mutex = Mutex.new
