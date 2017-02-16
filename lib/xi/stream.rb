@@ -1,5 +1,5 @@
 require 'set'
-require 'xi/stream/music_parameters'
+require 'xi/music_parameters'
 
 module Xi
   class Stream
