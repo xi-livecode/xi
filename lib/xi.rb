@@ -5,6 +5,10 @@ require 'xi/event'
 require 'xi/stream'
 require 'xi/clock'
 
+def inf
+  Float::INFINITY
+end
+
 module Xi
   def self.default_backend
     @default_backend
@@ -21,10 +25,6 @@ module Xi
 
     def peek_events(pattern, *args)
       pattern.peek_events(*args)
-    end
-
-    def inf
-      Float::INFINITY
     end
 
     def clock
