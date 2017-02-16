@@ -210,18 +210,33 @@ module Xi
         end
       end
 
-      # Traverses the pattern in order and then in reverse order
+      # Traverses the pattern in order and then in reverse order, skipping
+      # first and last values if +skip_extremes+ is true.
       #
       # @example
-      #   peek (0..3).p.bounce   #=> [0, 1, 2, 3, 3, 2, 1, 0]
+      #   peek (0..3).p.bounce   #=> [0, 1, 2, 3, 2, 1]
+      #   peek 10.p.bounce       #=> [10]
       #
+      # @example with skip_extremes=false
+      #   peek (0..3).p.bounce(false)   #=> [0, 1, 2, 3, 3, 2, 1, 0]
+      #
+      # @param skip_extremes [Boolean] Skip first and last values
+      #   to avoid repeated values (default: true)
       # @return [Pattern]
       #
-      def bounce
-        Pattern.new(self, size: size * 2 - 1) do |y|
-          each.with_index { |v, i| y << v if i > 0 }
-          reverse_each.with_index { |v, i| y << v if i > 0 }
-        end
+      def bounce(skip_extremes=true)
+        return self if size == 0 || size == 1
+
+        Pattern.new(self, size: size * 2 - 1) { |y|
+          last_id = 0
+          each.with_index { |v, i|
+            y << v
+            last_id = i
+          }
+          reverse_each.with_index { |v, i|
+            y << v unless skip_extremes && (i == 0 || i == last_id)
+          }
+        }
       end
 
       # Normalizes a pattern of values that range from +min+ to +max+ to 0..1
