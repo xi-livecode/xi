@@ -1,7 +1,10 @@
 require 'set'
+require 'xi/stream/music_parameters'
 
 module Xi
   class Stream
+    prepend MusicParameters
+
     attr_reader :clock, :source, :source_patterns, :state, :event_duration, :gate
 
     def initialize(name, clock)
@@ -92,6 +95,8 @@ module Xi
 
         gate_on, gate_off = play_enums(now)
 
+        transform_state
+
         do_gate_off_change(gate_off) unless gate_off.empty?
         do_state_change if state_changed?
         do_gate_on_change(gate_on) unless gate_on.empty?
@@ -178,6 +183,10 @@ module Xi
       end
 
       [gate_on, gate_off]
+    end
+
+    # @override
+    def transform_state
     end
 
     def new_sound_object_id
