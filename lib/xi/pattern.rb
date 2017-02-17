@@ -29,8 +29,6 @@ module Xi
         source
       end
 
-      @is_infinite = @source.size.nil? || @source.size == Float::INFINITY
-
       @event_duration = metadata.delete(:dur) || metadata.delete(:event_duration)
       @event_duration ||= source.event_duration if source.respond_to?(:event_duration)
       @event_duration ||= 1
@@ -38,8 +36,14 @@ module Xi
       @metadata = source.respond_to?(:metadata) ? source.metadata : {}
       @metadata.merge!(metadata)
 
+      @is_infinite = @source.size.nil? || @source.size == Float::INFINITY
+
       if @is_infinite
-        @total_duration = @event_duration
+        @total_duration = if @event_duration.respond_to?(:each)
+          @event_duration.each.first
+        else
+          @event_duration
+        end
       else
         last_ev = each_event.take(@source.size).last
         @total_duration = last_ev ? last_ev.start + last_ev.duration : 0
@@ -73,12 +77,13 @@ module Xi
     def each_event
       return enum_for(__method__) unless block_given?
 
-      dur = @event_duration
+      dur_enum = each_event_duration
       pos = 0
 
       @source.each do |value|
         if value.is_a?(Pattern)
           value.each do |v|
+            dur = dur_enum.next
             yield Event.new(v, pos, dur)
             pos += dur
           end
@@ -86,6 +91,7 @@ module Xi
           yield value
           pos += value.duration
         else
+          dur = dur_enum.next
           yield Event.new(value, pos, dur)
           pos += dur
         end
@@ -95,6 +101,15 @@ module Xi
     def each
       return enum_for(__method__) unless block_given?
       each_event { |e| yield e.value }
+    end
+
+    def each_event_duration
+      return enum_for(__method__) unless block_given?
+      if @event_duration.respond_to?(:each)
+        loop { @event_duration.each { |v| yield v } }
+      else
+        loop { yield @event_duration }
+      end
     end
 
     def inspect
