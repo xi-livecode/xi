@@ -5,10 +5,12 @@ module Xi
   class Stream
     prepend MusicParameters
 
-    attr_reader :clock, :source, :source_patterns, :state, :event_duration, :gate
+    attr_reader :clock, :opts, :source, :state, :event_duration, :gate
 
-    def initialize(name, clock)
+    def initialize(name, clock, **opts)
       @name = name.to_sym
+      @opts = opts
+
       @mutex = Mutex.new
       @playing = false
       @last_sound_object_id = 0
@@ -82,7 +84,8 @@ module Xi
 
     def inspect
       "#<#{self.class.name} :#{@name} " \
-        "#{playing? ? :playing : :stopped} at #{@clock.cps} cps>"
+        "#{playing? ? :playing : :stopped} at #{@clock.cps}cps" \
+        "#{" #{@opts}" if @opts.any?}>"
     rescue => err
       error(err)
     end

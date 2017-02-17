@@ -40,7 +40,7 @@ module Xi
     end
     alias_method :hush, :stop_all
 
-    def method_missing(method, backend=nil, *args)
+    def method_missing(method, backend=nil, **opts)
       backend ||= Xi.default_backend
       super if backend.nil?
 
@@ -54,7 +54,7 @@ module Xi
       s = @streams[backend][method] ||= begin
         require "xi/#{backend}"
         cls = Class.const_get("#{backend.to_s.capitalize}::Stream")
-        cls.new(method, self.clock, *args)
+        cls.new(method, self.clock, **opts)
       end
 
       b = Pry.binding_for(self)
