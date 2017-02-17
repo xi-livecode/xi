@@ -51,16 +51,17 @@ module Xi
       @streams ||= {}
       @streams[backend] ||= {}
 
-      s = @streams[backend][method] ||= begin
+      stream = @streams[backend][method] ||= begin
         require "xi/#{backend}"
-        cls = Class.const_get("#{backend.to_s.capitalize}::Stream")
+
+        cls = Class.const_get("#{backend.to_s.camelize}::Stream")
         cls.new(method, self.clock, **opts)
       end
 
-      b = Pry.binding_for(self)
-      b.local_variable_set(method, s)
+      # Define (or overwrite) a local variable named +method+ with the stream
+      Pry.binding_for(self).local_variable_set(method, stream)
 
-      s
+      stream
     end
   end
 end
