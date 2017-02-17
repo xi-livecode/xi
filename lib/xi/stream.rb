@@ -8,6 +8,8 @@ module Xi
     attr_reader :clock, :opts, :source, :state, :event_duration, :gate
 
     def initialize(name, clock, **opts)
+      Array(opts.delete(:include)).each { |m| include_mixin(m) }
+
       @name = name.to_sym
       @opts = opts
 
@@ -108,6 +110,17 @@ module Xi
     end
 
     private
+
+    def include_mixin(module_or_name)
+      mod = if module_or_name.is_a?(Module)
+        module_or_name
+      else
+        name = module_or_name.to_s
+        require "#{self.class.name.underscore}/#{name}"
+        self.class.const_get(name.camelize)
+      end
+      singleton_class.send(:include, mod)
+    end
 
     def changed_state
       @state.select { |k, _| @changed_params.include?(k) }
