@@ -18,28 +18,25 @@ class Xi::Stream
       @state = DEFAULT.merge(@state)
 
       if !changed_param?(:note) && changed_param?(:degree, :scale, :steps_per_octave)
-        @state[:note] = note_from(@state[:degree], @state[:scale],
-                                  @state[:steps_per_octave])
+        @state[:note] = reduce_to_note
         @changed_params << :note
       end
 
       if !changed_param?(:midinote) && changed_param?(:note)
-        @state[:midinote] = midinote_from(@state[:note], @state[:root],
-                                          @state[:octave],
-                                          @state[:steps_per_octave])
+        @state[:midinote] = reduce_to_midinote
         @changed_params << :midinote
       end
     end
 
-    def midinote_from(note, root, octave, steps_per_octave)
-      Array(note).compact.map { |n|
-        root.to_i + octave.to_i * steps_per_octave + n
+    def reduce_to_midinote
+      Array(@state[:note]).compact.map { |n|
+        @state[:root].to_i + @state[:octave].to_i * @state[:steps_per_octave] + n
       }
     end
 
-    def note_from(degree, scale, steps_per_octave)
-      Array(degree).compact.map do |d|
-        d.degree_to_key(Array(scale), steps_per_octave)
+    def reduce_to_note
+      Array(@state[:degree]).compact.map do |d|
+        d.degree_to_key(Array(@state[:scale]), @state[:steps_per_octave])
       end
     end
 
