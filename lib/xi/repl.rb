@@ -37,9 +37,9 @@ module Xi
       Pry.hooks.add_hook(:after_eval, "check_for_errors") do |result, pry|
         more_errors = ErrorLog.instance.more_errors?
         ErrorLog.instance.each do |msg|
-          puts "(╯°□°）╯︵ ɹoɹɹǝ #{msg}"
+          puts "Error: \e[1m\e[31m#{msg}\e[0m\e[22m"
         end
-        puts "(⌣_⌣”) There were more errors..." if more_errors
+        puts "\e[31mThere were more errors...\e[0m" if more_errors
       end
     end
 

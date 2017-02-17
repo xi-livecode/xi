@@ -1,5 +1,4 @@
 require 'thread'
-require 'logger'
 require 'set'
 
 Thread.abort_on_exception = true
@@ -83,11 +82,7 @@ module Xi
       return unless playing?
       @streams.each { |s| s.notify(cycles) }
     rescue => err
-      logger.error(err)
-    end
-
-    def logger
-      @logger ||= Logger.new(STDOUT)
+      error(err)
     end
   end
 end

@@ -84,7 +84,7 @@ module Xi
       "#<#{self.class.name} :#{@name} " \
         "#{playing? ? :playing : :stopped} at #{@clock.cps} cps>"
     rescue => err
-      logger.error(err)
+      error(err)
     end
 
     def notify(now)
@@ -159,7 +159,6 @@ module Xi
 
         # Do we need to play next event now? If not, skip this parameter
         if (@prev_end[p].nil? || now >= @prev_end[p]) && cur_pos >= next_ev.start - latency_sec
-          #logger.info "cur_pos=#{cur_pos} >= next_ev.start=#{next_ev.start}"
           # Update state based on pattern value
           # TODO: Pass as parameter exact time (start_ts + next_ev.start)
           update_state(p, next_ev.value)
@@ -208,21 +207,21 @@ module Xi
     end
 
     def do_gate_on_change(ss)
-      logger.info "Gate on change: #{ss}"
+      debug "Gate on change: #{ss}"
     end
 
     def do_gate_off_change(ss)
-      logger.info "Gate off change: #{ss}"
+      debug "Gate off change: #{ss}"
     end
 
     def do_state_change
-      logger.info "State change: #{@state
+      debug "State change: #{@state
         .select { |k, v| @changed_params.include?(k) }.to_h}"
     end
 
     def update_state(p, v)
       if v != @state[p]
-        logger.debug "Update state of :#{p}: #{v}"
+        debug "Update state of :#{p}: #{v}"
         @changed_params << p
         @state[p] = v
       end
@@ -238,11 +237,6 @@ module Xi
 
     def latency_sec
       0.05
-    end
-
-    def logger
-      # FIXME this should be configurable
-      @logger ||= Logger.new("/tmp/xi.log")
     end
   end
 end
