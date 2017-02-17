@@ -138,10 +138,20 @@ describe Xi::Pattern::Transforms do
   end
 
   describe '#bounce' do
-    it 'traverses original pattern and then in reverse order' do
-      @p = (1..5).p.bounce.to_a
-      assert_equal (2..5).to_a + (1..4).to_a.reverse, @p
-      assert_equal 8, @p.size
+    describe 'with no parameters' do
+      it 'traverses pattern in original order and then in reverse order without first and last values' do
+        @p = (1..5).p.bounce.to_a
+        assert_equal (1..4).to_a + (2..5).to_a.reverse, @p
+        assert_equal 8, @p.size
+      end
+    end
+
+    describe 'with parameter false' do
+      it 'traverses pattern in original order and then in reverse order' do
+        @p = (1..5).p.bounce(false).to_a
+        assert_equal (1..5).to_a + (1..5).to_a.reverse, @p
+        assert_equal 10, @p.size
+      end
     end
   end
 
