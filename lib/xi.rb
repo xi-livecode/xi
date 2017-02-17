@@ -40,8 +40,9 @@ module Xi
     end
     alias_method :hush, :stop_all
 
-    def method_missing(method, backend=nil, **params)
+    def method_missing(method, backend=nil, *args)
       backend ||= Xi.default_backend
+      super if backend.nil?
 
       if !backend.is_a?(String) && !backend.is_a?(Symbol)
         fail ArgumentError, "invalid backend '#{backend}'"
@@ -51,16 +52,10 @@ module Xi
       @streams[backend] ||= {}
 
       s = @streams[backend][method] ||= begin
-        cls = if backend
-          require "xi/#{backend}"
-          Class.const_get("#{backend.to_s.capitalize}::Stream")
-        else
-          Stream
-        end
-        cls.new(method, self.clock)
+        require "xi/#{backend}"
+        cls = Class.const_get("#{backend.to_s.capitalize}::Stream")
+        cls.new(method, self.clock, *args)
       end
-
-      s.set(s: method, **params) unless params.empty?
 
       b = Pry.binding_for(self)
       b.local_variable_set(method, s)
