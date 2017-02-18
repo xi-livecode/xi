@@ -170,9 +170,6 @@ module Xi
     def play_enums(now, cps)
       gate_on = []
 
-      # this is the posta:
-      #cps=4; tdur=3; loop { now = Time.now.to_f; cur_pos = (now * cps) % tdur; start_ts = now - (cur_pos / cps.to_f); p [cur_pos, start_ts, now - start_ts]; sleep 0.25 }
-
       @enums.each do |p, (enum, total_dur)|
         next if total_dur == 0
 
@@ -274,10 +271,13 @@ module Xi
     end
 
     def update_state(p, v)
-      if v != @state[p]
-        debug "Update state of :#{p}: #{v}"
-        @changed_params << p
-        @state[p] = v
+      kv = v.is_a?(Hash) ? v : {p => v}
+      kv.each do |k, v|
+        if v != @state[k]
+          debug "Update state of :#{k}: #{v}"
+          @changed_params << k
+          @state[k] = v
+        end
       end
     end
 
