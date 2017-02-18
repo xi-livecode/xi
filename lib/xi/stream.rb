@@ -1,11 +1,17 @@
+require 'xi/scale'
 require 'set'
-require 'xi/music_parameters'
 
 module Xi
   class Stream
-    prepend MusicParameters
-
     attr_reader :clock, :opts, :source, :state, :event_duration, :gate
+
+    DEFAULT_PARAMS = {
+      degree: 0,
+      octave: 5,
+      root:   0,
+      scale:  Xi::Scale.major,
+      steps_per_octave: 12,
+    }
 
     def initialize(name, clock, **opts)
       Array(opts.delete(:include)).each { |m| include_mixin(m) }
@@ -206,8 +212,34 @@ module Xi
       gate_on
     end
 
-    # @override
     def transform_state
+      @state = DEFAULT_PARAMS.merge(@state)
+
+      if !changed_param?(:note) && changed_param?(:degree, :scale, :steps_per_octave)
+        @state[:note] = reduce_to_note
+        @changed_params << :note
+      end
+
+      if !changed_param?(:midinote) && changed_param?(:note)
+        @state[:midinote] = reduce_to_midinote
+        @changed_params << :midinote
+      end
+    end
+
+    def reduce_to_midinote
+      Array(@state[:note]).compact.map { |n|
+        @state[:root].to_i + @state[:octave].to_i * @state[:steps_per_octave] + n
+      }
+    end
+
+    def reduce_to_note
+      Array(@state[:degree]).compact.map do |d|
+        d.degree_to_key(Array(@state[:scale]), @state[:steps_per_octave])
+      end
+    end
+
+    def changed_param?(*params)
+      @changed_params.any? { |p| params.include?(p) }
     end
 
     def new_sound_object_id
