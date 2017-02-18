@@ -98,15 +98,15 @@ module Xi
       error(err)
     end
 
-    def notify(now)
+    def notify(now, cps)
       return unless playing? && @source
 
       @mutex.synchronize do
         @changed_params.clear
 
-        forward_enums(now) if @must_forward
+        forward_enums(now, cps) if @must_forward
         gate_off = gate_off_old_sound_objects(now)
-        gate_on = play_enums(now)
+        gate_on = play_enums(now, cps)
 
         # Call hooks
         do_gate_off_change(gate_off) unless gate_off.empty?
@@ -132,18 +132,18 @@ module Xi
       @state.select { |k, _| @changed_params.include?(k) }
     end
 
-    def forward_enums(now)
+    def forward_enums(now, cps)
       @enums.each do |p, (enum, total_dur)|
         next if total_dur == 0
 
-        cur_pos = now % total_dur
-        start_pos = now - cur_pos
+        cur_pos = (now * cps) % total_dur
+        start_ts = now - (cur_pos / cps)
 
         loop do
           next_ev = enum.peek
           distance = (cur_pos - next_ev.start) % total_dur
 
-          @prev_end[p] = start_pos + next_ev.end
+          @prev_end[p] = start_ts + (next_ev.end / cps)
           enum.next
 
           break if distance <= next_ev.duration
@@ -168,19 +168,24 @@ module Xi
       gate_off
     end
 
-    def play_enums(now)
+    def play_enums(now, cps)
       gate_on = []
+
+      # this is the posta:
+      #cps=4; tdur=3; loop { now = Time.now.to_f; cur_pos = (now * cps) % tdur; start_ts = now - (cur_pos / cps.to_f); p [cur_pos, start_ts, now - start_ts]; sleep 0.25 }
 
       @enums.each do |p, (enum, total_dur)|
         next if total_dur == 0
 
-        cur_pos = now % total_dur
-        start_pos = now - cur_pos
+        cur_pos = (now * cps) % total_dur
+        start_ts = now - (cur_pos / cps)
 
         next_ev = enum.peek
 
         # Do we need to play next event now? If not, skip this parameter
-        if (@prev_end[p].nil? || now >= @prev_end[p]) && cur_pos >= next_ev.start - latency_sec
+        if (@prev_end[p].nil? || now >= @prev_end[p]) &&
+            cur_pos >= next_ev.start - latency_sec
+
           # Update state based on pattern value
           # TODO: Pass as parameter exact time (start_ts + next_ev.start)
           update_state(p, next_ev.value)
@@ -193,19 +198,19 @@ module Xi
 
             gate_on << {
               so_ids: new_so_ids,
-              at: start_pos + next_ev.start
+              at: start_ts + (next_ev.start / cps),
             }
 
             @playing_sound_objects[rand(100000)] = {
               so_ids: new_so_ids,
               duration: total_dur,
-              at: start_pos + next_ev.end,
+              at: start_ts + (next_ev.end / cps),
             }
           end
 
           # Because we already processed event, advance enumerator
           next_ev = enum.next
-          @prev_end[p] = start_pos + next_ev.end
+          @prev_end[p] = start_ts + (next_ev.end / cps)
         end
       end
 

@@ -29,7 +29,7 @@ module Xi
     end
 
     def cps=(new_cps)
-      @mutex.synchronize { @cps = new_cps }
+      @mutex.synchronize { @cps = new_cps.to_f }
     end
 
     def playing?
@@ -38,10 +38,6 @@ module Xi
 
     def stopped?
       !playing?
-    end
-
-    def now
-      Time.now.to_f * cps
     end
 
     def play
@@ -60,12 +56,9 @@ module Xi
       @mutex.synchronize { 1.0 / @cps }
     end
 
-    def at(cycle_pos)
-      Time.at(cycle_pos * seconds_per_cycle)
-    end
-
     def inspect
-      "#<#{self.class.name}:#{"0x%014x" % object_id} cps=#{cps.inspect} #{playing? ? :playing : :stopped}>"
+      "#<#{self.class.name}:#{"0x%014x" % object_id} " \
+        "cps=#{cps.inspect} #{playing? ? :playing : :stopped}>"
     end
 
     private
@@ -78,9 +71,10 @@ module Xi
     end
 
     def do_tick
-      cycles = Time.now.to_f * cps
       return unless playing?
-      @streams.each { |s| s.notify(cycles) }
+      now = Time.now.to_f
+      cps = self.cps
+      @streams.each { |s| s.notify(now, cps) }
     rescue => err
       error(err)
     end
