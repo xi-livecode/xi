@@ -32,7 +32,6 @@ module Xi
 
     def set(event_duration: nil, gate: nil, **source)
       @mutex.synchronize do
-        source[:s] ||= @name
         @source = source
         @gate = gate if gate
         @event_duration = event_duration if event_duration
@@ -219,6 +218,8 @@ module Xi
 
     def transform_state
       @state = DEFAULT_PARAMS.merge(@state)
+
+      @state[:s] ||= @name
 
       if !changed_param?(:note) && changed_param?(:degree, :scale, :steps_per_octave)
         @state[:note] = reduce_to_note
