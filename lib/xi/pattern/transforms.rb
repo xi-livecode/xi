@@ -322,7 +322,7 @@ module Xi
       def sometimes(probability=0.5)
         prob_pat = probability.p
 
-        if times_pat.infinite?
+        if prob_pat.infinite?
           fail ArgumentError, 'times must be a finite pattern'
         end
 
