@@ -270,8 +270,8 @@ module Xi
         .select { |k, v| @changed_params.include?(k) }.to_h}"
     end
 
-    def update_state(p, v)
-      kv = v.is_a?(Hash) ? v : {p => v}
+    def update_state(param, value)
+      kv = value.is_a?(Hash) ? value : {param => value}
       kv.each do |k, v|
         if v != @state[k]
           debug "Update state of :#{k}: #{v}"
