@@ -107,7 +107,26 @@ module Xi
           end
         end
 
-        # TODO Document
+        # Generates values from a sinewave discretized to +quant+ events
+        # for the duration of +dur+ cycles.
+        #
+        # Values range from -1 to 1
+        #
+        # @see #sin1 for the same function but constrained on 0 to 1 values
+        #
+        # @example
+        #   P.sin(8).map { |i| i.round(2) }
+        #     #=> [0.0, 0.71, 1.0, 0.71, 0.0, -0.71, -1.0, -0.71]
+        #
+        # @example +quant+ determines the size, +dur+ the total duration
+        #   P.sin(8).size                 #=> 8
+        #   P.sin(22).total_duration      #=> (1/1)
+        #   P.sin(19, 2).total_duration   #=> (2/1)
+        #
+        # @param quant [Fixnum]
+        # @param dur [Fixnum] (default: 1)
+        # @return [Pattern]
+        #
         def sin(quant, dur=1)
           Pattern.new(size: quant, dur: dur / quant) do |y|
             quant.times do |i|
@@ -116,7 +135,21 @@ module Xi
           end
         end
 
-        # TODO Document
+        # Generates values from a sinewave discretized to +quant+ events
+        # for the duration of +dur+ cycles.
+        #
+        # Values range from 0 to 1
+        #
+        # @see #sin
+        #
+        # @example
+        #   P.sin1(8).map { |i| i.round(2) }
+        #     #=> [0.5, 0.85, 1.0, 0.85, 0.5, 0.15, 0.0, 0.15]
+        #
+        # @param quant [Fixnum]
+        # @param dur [Fixnum] (default: 1)
+        # @return [Pattern]
+        #
         def sin1(quant, dur=1)
           sin(quant, dur).scale(-1, 1, 0, 1)
         end

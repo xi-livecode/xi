@@ -291,6 +291,7 @@ module Xi
       #
       # @example
       #   peek [0,2,4,1,3,6].p.scale(0, 6, 0, 0x7f)
+      #     #=> [(0/1), (127/3), (254/3), (127/6), (127/2), (127/1)]
       #
       # @param min_from [Numeric]
       # @param max_from [Numeric]
@@ -302,14 +303,38 @@ module Xi
         normalize(min_from, max_from).denormalize(min_to, max_to)
       end
 
-      # TODO Document
+      # Slows down a pattern by stretching start and duration of events
+      # +num+ times.
+      #
+      # It is the inverse operation of #accelerate
+      #
+      # @example
+      #   peek_events %w(a b c d).p([1/4, 1/8, 1/6]).decelerate(2)
+      #     #=> [E["a",0,1/2], E["b",1/2,1/4], E["c",3/4,1/3], E["d",13/12,1/2]]
+      #
+      # @param num [Numeric]
+      # @return [Pattern]
+      # @see #accelerate
+      #
       def decelerate(num)
         Pattern.new(self) { |y|
           each_event { |e| y << E[e.value, e.start * num, e.duration * num] }
         }
       end
 
-      # TODO Document
+      # Advance a pattern by shrinking start and duration of events
+      # +num+ times.
+      #
+      # It is the inverse operation of #decelerate
+      #
+      # @example
+      #   peek_events %w(a b c d).p([1/2, 1/4]).accelerate(2)
+      #     #=> [E["a",0,1/4], E["b",1/4,1/8], E["c",3/8,1/4], E["d",5/8,1/8]]
+      #
+      # @param num [Numeric]
+      # @return [Pattern]
+      # @see #decelerate
+      #
       def accelerate(num)
         Pattern.new(self) { |y|
           each_event { |e| y << E[e.value, e.start / num, e.duration / num] }
@@ -317,7 +342,21 @@ module Xi
       end
 
       # Based on +probability+, it yields original value or nil
-      # TODO Document
+      #
+      # +probability+ can also be an enumerable or a *finite* Pattern. In this
+      # case, for each value in +probability+ it will enumerate original
+      # pattern based on that probability value.
+      #
+      # @example
+      #   peek (1..6).p.sometimes        #=> [1, nil, 3, nil, 5, 6]
+      #   peek (1..6).p.sometimes(1/4)   #=> [nil, nil, nil, 4, nil, 6]
+      #
+      # @example
+      #   peek (1..6).p.sometimes([0.5, 1]), 12
+      #     #=> [1, 2, nil, nil, 5, 6, 1, 2, 3, 4, 5, 6]
+      #
+      # @param probability [Numeric, #each] (default=0.5)
+      # @return [Pattern]
       #
       def sometimes(probability=0.5)
         prob_pat = probability.p
@@ -334,7 +373,21 @@ module Xi
       end
 
       # Repeats each value +times+
-      # TODO Document
+      #
+      # +times+ can also be an enumerable or a *finite* Pattern.  In this case,
+      # for each value in +times+, it will yield each value of original pattern
+      # repeated a number of times based on that +times+ value.
+      #
+      # @example
+      #   peek [1, 2, 3].p.repeat_each(2)   #=> [1, 1, 2, 2, 3, 3]
+      #   peek [1, 2, 3].p.repeat_each(3)   #=> [1, 1, 1, 2, 2, 2, 3, 3, 3]
+      #
+      # @example
+      #   peek [1, 2, 3].p.repeat_each([3,2]), 15
+      #     #=> [1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 2, 2, 3, 3]
+      #
+      # @param times [Numeric, #each]
+      # @return [Pattern]
       #
       def repeat_each(times)
         times_pat = times.p

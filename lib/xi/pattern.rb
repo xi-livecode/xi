@@ -16,6 +16,13 @@ module Xi
 
     def_delegators :@source, :size
 
+    # Creates a new Pattern given either a +source+ or a block
+    # that yields values
+    #
+    # @param source [#each]
+    # @param size [Fixnum] number of elements (default: nil)
+    # @param dur [Hash]
+    #
     def initialize(source=nil, size: nil, **metadata)
       if source.nil? && !block_given?
         fail ArgumentError, 'must provide source or block'
