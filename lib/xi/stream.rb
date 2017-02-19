@@ -142,7 +142,7 @@ module Xi
           next_ev = enum.peek
           distance = (cur_pos - next_ev.start) % total_dur
 
-          @prev_end[p] = start_ts + (next_ev.end / cps)
+          @prev_end[p] = @clock.init_ts + start_ts + (next_ev.end / cps)
           enum.next
 
           break if distance <= next_ev.duration
@@ -158,7 +158,7 @@ module Xi
       # Check if there are any currently playing sound objects that
       # must be gated off
       @playing_sound_objects.dup.each do |end_pos, h|
-        if now >= h[:at] - latency_sec
+        if now + @clock.init_ts >= h[:at] - latency_sec
           gate_off << h
           @playing_sound_objects.delete(end_pos)
         end
@@ -179,7 +179,7 @@ module Xi
         next_ev = enum.peek
 
         # Do we need to play next event now? If not, skip this parameter
-        if (@prev_end[p].nil? || now >= @prev_end[p]) &&
+        if (@prev_end[p].nil? || now + @clock.init_ts >= @prev_end[p]) &&
             cur_pos >= next_ev.start - latency_sec
 
           # Update state based on pattern value
@@ -194,19 +194,19 @@ module Xi
 
             gate_on << {
               so_ids: new_so_ids,
-              at: start_ts + (next_ev.start / cps),
+              at: @clock.init_ts + start_ts + (next_ev.start / cps),
             }
 
             @playing_sound_objects[rand(100000)] = {
               so_ids: new_so_ids,
               duration: total_dur,
-              at: start_ts + (next_ev.end / cps),
+              at: @clock.init_ts + start_ts + (next_ev.end / cps),
             }
           end
 
           # Because we already processed event, advance enumerator
           next_ev = enum.next
-          @prev_end[p] = start_ts + (next_ev.end / cps)
+          @prev_end[p] = @clock.init_ts + start_ts + (next_ev.end / cps)
         end
       end
 

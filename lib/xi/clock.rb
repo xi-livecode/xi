@@ -8,11 +8,14 @@ module Xi
     DEFAULT_CPS  = 1.0
     INTERVAL_SEC = 10 / 1000.0
 
+    attr_reader :init_ts
+
     def initialize(cps: DEFAULT_CPS)
       @mutex = Mutex.new
       @cps = cps
       @playing = true
       @streams = [].to_set
+      @init_ts = Time.now.to_f
       @play_thread = Thread.new { thread_routine }
     end
 
@@ -72,7 +75,7 @@ module Xi
 
     def do_tick
       return unless playing?
-      now = Time.now.to_f
+      now = Time.now.to_f - @init_ts
       cps = self.cps
       @streams.each { |s| s.notify(now, cps) }
     rescue => err
