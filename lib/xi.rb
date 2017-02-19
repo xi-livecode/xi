@@ -18,7 +18,24 @@ module Xi
     @default_backend = new_name && new_name.to_sym
   end
 
+  def self.default_clock
+    @default_clock ||= Clock.new
+  end
+
+  def self.default_clock=(new_clock)
+    @default_clock = new_clock
+  end
+
   module Init
+    def stop_all
+      @streams.each { |_, ss| ss.each { |_, s| s.stop } }
+    end
+    alias_method :hush, :stop_all
+
+    def start_all
+      @streams.each { |_, ss| ss.each { |_, s| s.start } }
+    end
+
     def peek(pattern, *args)
       pattern.peek(*args)
     end
@@ -26,19 +43,6 @@ module Xi
     def peek_events(pattern, *args)
       pattern.peek_events(*args)
     end
-
-    def clock
-      @default_clock ||= Clock.new
-    end
-
-    def stop_all
-      @streams.each do |backend, ss|
-        ss.each do |name, stream|
-          stream.stop
-        end
-      end
-    end
-    alias_method :hush, :stop_all
 
     def method_missing(method, backend=nil, **opts)
       backend ||= Xi.default_backend
@@ -55,7 +59,7 @@ module Xi
         require "xi/#{backend}"
 
         cls = Class.const_get("#{backend.to_s.camelize}::Stream")
-        cls.new(method, self.clock, **opts)
+        cls.new(method, Xi.default_clock, **opts)
       end
 
       # Define (or overwrite) a local variable named +method+ with the stream
