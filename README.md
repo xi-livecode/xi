@@ -1,4 +1,4 @@
-# Xi
+# Xi  [![Build Status](https://travis-ci.org/xi-livecode/xi.svg?branch=master)](https://travis-ci.org/xi-livecode/xi)
 
 Xi (pronounced /ˈzaɪ/) is a musical pattern language inspired in Tidal and
 SuperCollider for building higher-level musical constructs easily.  It is
