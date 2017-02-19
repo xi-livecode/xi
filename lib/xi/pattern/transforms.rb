@@ -402,6 +402,53 @@ module Xi
           end
         end
       end
+
+      # Choose items from the list randomly, +repeats+ number of times
+      #
+      # @see Pattern::Generators::ClassMethods#rand
+      #
+      # @example
+      #   peek [1, 2, 3].p.rand             #=> [2]
+      #   peek [1, 2, 3, 4].p.rand(6)       #=> [1, 3, 2, 2, 4, 3]
+      #
+      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @return [Pattern]
+      #
+      def rand(repeats=1)
+        P.rand(self, repeats)
+      end
+
+      # Choose randomly, but only allow repeating the same item after yielding
+      # all items from the list.
+      #
+      # @see Pattern::Generators::ClassMethods#xrand
+      #
+      # @example
+      #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
+      #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
+      #
+      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @return [Pattern]
+      #
+      def xrand(repeats=1)
+        P.xrand(self, repeats)
+      end
+
+      # Shuffle the list in random order, and use the same random order
+      # +repeats+ times
+      #
+      # @see Pattern::Generators::ClassMethods#shuf
+      #
+      # @example
+      #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
+      #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
+      #
+      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @return [Pattern]
+      #
+      def shuf(repeats=1)
+        P.shuf(self, repeats)
+      end
     end
   end
 end

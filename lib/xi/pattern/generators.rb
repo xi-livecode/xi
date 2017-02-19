@@ -51,12 +51,17 @@ module Xi
           end
         end
 
-        # Choose items from the list randomly
+        # Choose items from the +list+ randomly, +repeats+ number of times
+        #
+        # +list+ can be a *finite* enumerable or Pattern.
+        #
+        # @see Pattern::Transforms#rand
         #
         # @example
-        #   peek [1, 2, 3].p.rand             #=> [2]
-        #   peek [1, 2, 3, 4].p.rand(6)       #=> [1, 3, 2, 2, 4, 3]
+        #   peek P.rand([1, 2, 3])          #=> [2]
+        #   peek P.rand([1, 2, 3, 4], 6)    #=> [1, 3, 2, 2, 4, 3]
         #
+        # @param list [#each] list of values
         # @param repeats [Fixnum, Symbol] number or inf (default: 1)
         # @return [Pattern]
         #
@@ -70,10 +75,15 @@ module Xi
         # Choose randomly, but only allow repeating the same item after yielding
         # all items from the list.
         #
-        # @example
-        #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
-        #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
+        # +list+ can be a *finite* enumerable or Pattern.
         #
+        # @see Pattern::Transforms#xrand
+        #
+        # @example
+        #   peek P.xrand([1, 2, 3, 4, 5])    #=> [4]
+        #   peek P.xrand([1, 2, 3], 8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
+        #
+        # @param list [#each] list of values
         # @param repeats [Fixnum, Symbol] number or inf (default: 1)
         # @return [Pattern]
         #
@@ -91,10 +101,15 @@ module Xi
         # Shuffle the list in random order, and use the same random order
         # +repeats+ times
         #
-        # @example
-        #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
-        #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
+        # +list+ can be a *finite* enumerable or Pattern.
         #
+        # @see Pattern::Transforms#shuf
+        #
+        # @example
+        #   peek P.shuf([1, 2, 3, 4, 5])    #=> [5, 3, 4, 1, 2]
+        #   peek P.shuf([1, 2, 3], 3)       #=> [2, 3, 1, 2, 3, 1, 2, 3, 1]
+        #
+        # @param list [#each] list of values
         # @param repeats [Fixnum, Symbol] number or inf (default: 1)
         # @return [Pattern]
         #
