@@ -2,21 +2,13 @@ require 'xi/pattern'
 
 module Xi
   module Pattern::Enumerable
-    def p(dur=nil, **metadata)
-      Pattern.new(self, event_duration: dur, **metadata)
+    def p(delta=nil, **metadata)
+      Pattern.new(self.to_a, delta: delta, **metadata)
     end
   end
 end
 
 class Enumerator
-  include Xi::Pattern::Enumerable
-end
-
-class Array
-  include Xi::Pattern::Enumerable
-end
-
-class Hash
   include Xi::Pattern::Enumerable
 end
 

@@ -64,6 +64,14 @@ module Xi
       @mutex.synchronize { 1.0 / @cps }
     end
 
+    def current_time
+      Time.now.to_f - @init_ts + @latency
+    end
+
+    def current_cycle
+      current_time * cps
+    end
+
     def inspect
       "#<#{self.class.name}:#{"0x%014x" % object_id} " \
         "cps=#{cps.inspect} #{playing? ? :playing : :stopped}>"
@@ -80,7 +88,7 @@ module Xi
 
     def do_tick
       return unless playing?
-      now = Time.now.to_f - @init_ts + @latency
+      now  = self.current_time
       cps = self.cps
       @streams.each { |s| s.notify(now, cps) }
     rescue => err

@@ -2,36 +2,73 @@ require 'test_helper'
 
 describe Xi::Pattern do
   describe '#new' do
-    it 'accepts an enumerable as parameter' do
+    it 'takes an array as +source+' do
       @p = Xi::Pattern.new([1, 2, 3])
 
       assert_instance_of Xi::Pattern, @p
+      assert_equal [1, 2, 3], @p.source
     end
 
-    it 'accepts a block with a yielder var, like an enumerator' do
-      @p = Xi::Pattern.new do |y|
+    it 'takes a block as +source+' do
+      @p = Xi::Pattern.new { |y|
         y << 1
         y << [10, 20]
         y << :foo
-      end
+      }
 
       assert_instance_of Xi::Pattern, @p
-      assert_equal [1, [10, 20], :foo], @p.to_a
+      assert_instance_of Proc, @p.source
+      assert_equal [1, [10, 20], :foo], @p.take_values(3)
     end
 
-    it 'accepts event_duration, which defaults to 1' do
-      @p = Xi::Pattern.new([1])
-      assert_equal 1, @p.event_duration
+    it 'takes a block as +source+ that yields [v, s, d]' do
+      @p = Xi::Pattern.new(delta: 1/2) { |y, d|
+        (1..inf).each { |v| y << v }
+      }
 
-      @p = Xi::Pattern.new([1], event_duration: 1/4)
-      assert_equal 1/4, @p.event_duration
+      assert_instance_of Xi::Pattern, @p
+      assert_instance_of Proc, @p.source
+      assert_equal (1..10).to_a, @p.take_values(10)
+    end
+
+    it 'takes a Pattern instance as +source+' do
+      p1 = Xi::Pattern.new([1, 2, 3])
+      @p = Xi::Pattern.new(p1)
+
+      assert_instance_of Xi::Pattern, @p
+      assert_equal p1, @p.source
+      assert_equal [1, 2, 3], @p.take_values(3)
+    end
+
+    it 'accepts +delta+, which defaults to 1' do
+      @p = Xi::Pattern.new([1])
+      assert_equal 1, @p.delta
+
+      @p = Xi::Pattern.new([1], delta: 1/4)
+      assert_equal 1/4, @p.delta
     end
 
     it 'accepts metadata as keyword arguments' do
-      @p = Xi::Pattern.new([1], event_duration: 1/2, foo: :bar)
+      @p = Xi::Pattern.new([1], delta: 1/2, foo: :bar)
 
-      assert_equal 1/2, @p.event_duration
+      assert_equal 1/2, @p.delta
       assert_equal({foo: :bar}, @p.metadata)
+    end
+
+    it 'raises ArgumentError if neither source or block are provided' do
+      assert_raises(ArgumentError) do
+        @p = Xi::Pattern.new
+      end
+    end
+
+    it 'raises ArgumentError if delta is infinite' do
+      assert_raises(ArgumentError) do
+        @p = Xi::Pattern.new([1, 2, 3], delta: (1..inf))
+      end
+
+      assert_raises(ArgumentError) do
+        @p = Xi::Pattern.new([1, 2, 3], delta: P.series)
+      end
     end
   end
 
@@ -40,59 +77,49 @@ describe Xi::Pattern do
       assert_equal Xi::Pattern[1,2,3],
                    Xi::Pattern.new([1,2,3])
 
-      assert_equal Xi::Pattern[1,2,3, dur: 1/2],
-                   Xi::Pattern.new([1,2,3], dur: 1/2)
+      assert_equal Xi::Pattern[1,2,3, delta: 1/2],
+                   Xi::Pattern.new([1,2,3], delta: 1/2)
 
-      assert_equal Xi::Pattern[1,2,3, dur: 1/2, gate: :note],
-                   Xi::Pattern.new([1,2,3], dur: 1/2, gate: :note)
+      assert_equal Xi::Pattern[1,2,3, delta: 1/2, gate: :note],
+                   Xi::Pattern.new([1,2,3], delta: 1/2, gate: :note)
     end
   end
 
   describe '#p' do
     before do
-      @p = Xi::Pattern.new([1])
+      @p = Xi::Pattern.new([1], delta: 2, baz: 1)
     end
 
     it 'returns a new Pattern with the same source' do
       assert_equal @p.p.source.object_id, @p.source.object_id
     end
 
-    it 'accepts event duration as first parameter' do
-      assert_equal 1, @p.event_duration
-      assert_equal 1/2, @p.p(1/2).event_duration
+    it 'accepts event duration as first parameter, and overrides original' do
+      assert_equal 2, @p.delta
+      assert_equal 1/2, @p.p(1/2).delta
     end
 
-    it 'accepts metadata as keyword arguments' do
-      assert_equal({}, @p.metadata)
-      assert_equal({foo: :bar}, @p.p(foo: :bar).metadata)
+    it 'accepts metadata as keyword arguments, and is merged with original' do
+      assert_equal({baz: 1}, @p.metadata)
+      assert_equal({foo: :bar, baz: 1}, @p.p(foo: :bar).metadata)
     end
   end
 
+=begin
   describe '#each' do
-    before do
-      @p = Xi::Pattern.new(1..4)
-    end
-
-    it 'returns an Enumerator that returns only values from the events' do
-      assert_instance_of Enumerator, @p.each
-      assert_equal [1, 2, 3, 4], @p.each.to_a
-    end
-  end
-
-  describe '#each_event' do
     describe 'when source values are of other types' do
       it 'enumerates events from its source' do
         @p = Xi::Pattern.new([1, 2, 3])
 
-        assert_equal [E[1,0,1], E[2,1,1], E[3,2,1]], @p.each_event.to_a
+        assert_equal [[1,0,1], [2,1,1], [3,2,1]], @p.each.take(3)
       end
 
-      it 'enumerates events using event_duration as duration and offset' do
-        @p = Xi::Pattern.new([1, 2], event_duration: 1/2)
-        assert_equal [E[1,0,1/2], E[2,1/2,1/2]], @p.each_event.to_a
+      it 'enumerates events using +delta+ as duration and offset' do
+        @p = Xi::Pattern.new([1, 2], delta: 1/2)
+        assert_equal [[1,0,1/2], [2,1/2,1/2]], @p.each.take(2)
 
-        @p = Xi::Pattern.new([1, 2], event_duration: 1/4)
-        assert_equal [E[1,0,1/4], E[2,1/4,1/4]], @p.each_event.to_a
+        @p = Xi::Pattern.new([1, 2], delta: 1/4)
+        assert_equal [[1,0,1/4], [2,1/4,1/4]], @p.each.take(2)
       end
     end
 
@@ -100,8 +127,8 @@ describe Xi::Pattern do
       it 'embeds patterns by taking only its values, ignoring start and duration' do
         @p = Xi::Pattern.new([1, 2, Xi::Pattern.new([10, 20]), 3])
 
-        assert_equal [E[1,0,1], E[2,1,1], E[10,2,1], E[20,3,1], E[3,4,1]],
-          @p.each_event.to_a
+        assert_equal [[1,0,1], [2,1,1], [10,2,1], [20,3,1], [3,4,1]],
+          @p.each.take(5)
       end
     end
 
@@ -174,4 +201,5 @@ describe Xi::Pattern do
       assert_equal [E[1,0], E[3,2]], new_p.to_events
     end
   end
+=end
 end

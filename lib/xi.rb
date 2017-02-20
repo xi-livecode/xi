@@ -1,7 +1,6 @@
 require "xi/version"
 require 'xi/core_ext'
 require 'xi/pattern'
-require 'xi/event'
 require 'xi/stream'
 require 'xi/clock'
 
@@ -37,11 +36,11 @@ module Xi
     end
 
     def peek(pattern, *args)
-      pattern.peek(*args)
+      pattern.peek_values(*args)
     end
 
-    def peek_events(pattern, *args)
-      pattern.peek_events(*args)
+    def peek_events(pattern, limit=10, *args)
+      pattern.peek(*args)
     end
 
     def method_missing(method, backend=nil, **opts)

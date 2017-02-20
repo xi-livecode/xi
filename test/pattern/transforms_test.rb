@@ -10,7 +10,7 @@ describe Xi::Pattern::Transforms do
 
     it 'preserves non-numeric values' do
       @p = -[1, 42, 'w', [4, 5], [10].p].p
-      assert_equal [-1, -42, 'w', [4, 5], -10], @p.to_a
+      assert_equal [-1, -42, 'w', [4, 5], -[10].p], @p.to_a
       assert_equal 5, @p.size
     end
   end
@@ -110,12 +110,6 @@ describe Xi::Pattern::Transforms do
       @p = [1, 2, 3].p.seq(0)
       assert_equal [], @p.to_a
       assert_equal 0, @p.size
-    end
-
-    it 'cycles forever if :repeats == inf' do
-      @p = [1, 2, 3].p.seq(inf)
-      assert_equal [1, 2, 3, 1, 2, 3, 1, 2, 3, 1], @p.take(10)
-      assert @p.infinite?
     end
 
     it 'cycles the pattern with a different starting offset' do

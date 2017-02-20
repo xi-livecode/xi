@@ -4,19 +4,19 @@ describe Xi::Pattern::Generators do
   describe '.series' do
     it do
       @p = P.series
-      assert_equal (0..9).to_a, @p.take(10)
+      assert_equal (0..9).to_a, @p.take_values(10)
       assert @p.infinite?
     end
 
     it 'accepts a starting number' do
       @p = P.series(3)
-      assert_equal [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], @p.take(10)
+      assert_equal [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], @p.take_values(10)
       assert @p.infinite?
     end
 
     it 'accepts starting and step numbers' do
       @p = P.series(0, 2)
-      assert_equal [0, 2, 4, 6, 8, 10, 12, 14, 16, 18], @p.take(10)
+      assert_equal [0, 2, 4, 6, 8, 10, 12, 14, 16, 18], @p.take_values(10)
       assert @p.infinite?
     end
 
@@ -31,19 +31,19 @@ describe Xi::Pattern::Generators do
   describe '.geom' do
     it do
       @p = P.geom
-      assert_equal [0] * 10, @p.take(10)
+      assert_equal [0] * 10, @p.take_values(10)
       assert @p.infinite?
     end
 
     it 'accepts a starting number' do
       @p = P.geom(3)
-      assert_equal [3] * 10, @p.take(10)
+      assert_equal [3] * 10, @p.take_values(10)
       assert @p.infinite?
     end
 
     it 'accepts starting and step numbers' do
       @p = P.geom(1, 2)
-      assert_equal [1, 2, 4, 8, 16, 32, 64, 128, 256, 512], @p.take(10)
+      assert_equal [1, 2, 4, 8, 16, 32, 64, 128, 256, 512], @p.take_values(10)
       assert @p.infinite?
     end
 
@@ -60,12 +60,12 @@ describe Xi::Pattern::Generators do
       @p = P.rand(1..5)
       assert @p.finite?
       assert_equal 1, @p.size
-      assert (1..5).include?(@p.first)
+      assert (1..5).include?(@p.each.first)
 
       @p = P.rand(1..5, 6)
       assert @p.finite?
       assert_equal 6, @p.size
-      assert @p.all? { |v| (1..5).include?(v) }
+      assert @p.each.all? { |v| (1..5).include?(v) }
     end
   end
 
@@ -74,12 +74,12 @@ describe Xi::Pattern::Generators do
       @p = P.xrand(1..5)
       assert @p.finite?
       assert_equal 1, @p.size
-      assert (1..5).include?(@p.first)
+      assert (1..5).each.include?(@p.each.first)
 
       @p = P.xrand(1..3, 9)
       assert @p.finite?
       assert_equal 9, @p.size
-      @p.each_slice(3) do |slice|
+      @p.each.each_slice(3) do |slice|
         assert_equal (1..3).to_a, slice.sort
       end
     end
@@ -90,12 +90,12 @@ describe Xi::Pattern::Generators do
       @p = P.shuf(1..5)
       assert @p.finite?
       assert_equal 5, @p.size
-      assert (1..5).include?(@p.first)
+      assert (1..5).include?(@p.each.first)
 
       @p = P.shuf(1..3, 3)
       assert @p.finite?
       assert_equal 9, @p.size
-      @p.each_slice(3) do |slice|
+      @p.each.each_slice(3) do |slice|
         assert_equal (1..3).to_a, slice.sort
       end
     end

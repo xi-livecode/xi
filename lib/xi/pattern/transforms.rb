@@ -12,12 +12,7 @@ module Xi
       # @return [Pattern]
       #
       def -@
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:-@) ? -v : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:-@) ? -v : v }
       end
 
       # Concatenate +object+ pattern or perform a scalar sum with +object+
@@ -39,17 +34,12 @@ module Xi
       #
       def +(object)
         if object.is_a?(Pattern)
-          Pattern.new(self, size: size + object.size) { |y|
+          Pattern.new(self, size: size + object.size) { |y, d|
             each { |v| y << v }
             object.each { |v| y << v }
           }
         else
-          Pattern.new(self) { |y|
-            each_event { |e|
-              v = e.value
-              y << E[(v.respond_to?(:+) ? v + object : v), e.start, e.duration]
-            }
-          }
+          map { |v| v.respond_to?(:+) ? v + object : v }
         end
       end
 
@@ -66,12 +56,7 @@ module Xi
       # @return [Pattern]
       #
       def -(numeric)
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:-) ? v - numeric : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:-) ? v - numeric : v }
       end
 
       # Performs a scalar multiplication with +numeric+
@@ -87,12 +72,7 @@ module Xi
       # @return [Pattern]
       #
       def *(numeric)
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:*) ? v * numeric : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:*) ? v * numeric : v }
       end
 
       # Performs a scalar division by +numeric+
@@ -108,12 +88,7 @@ module Xi
       # @return [Pattern]
       #
       def /(numeric)
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:/) ? v / numeric : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:/) ? v / numeric : v }
       end
 
       # Performs a scalar modulo against +numeric+
@@ -129,12 +104,7 @@ module Xi
       # @return [Pattern]
       #
       def %(numeric)
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:%) ? v % numeric : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:%) ? v % numeric : v }
       end
 
       # Raises each value to the power of +numeric+, which may be negative or
@@ -150,12 +120,7 @@ module Xi
       # @return [Pattern]
       #
       def **(numeric)
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:**) ? v ** numeric : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:**) ? v ** numeric : v }
       end
       alias_method :^, :**
 
@@ -166,16 +131,16 @@ module Xi
       #   peek [1, 2, 3].p.seq(2)           #=> [1, 2, 3, 1, 2, 3]
       #   peek [1, 2, 3].p.seq(1, 1)        #=> [2, 3, 1]
       #   peek [1, 2, 3].p.seq(2, 2)        #=> [3, 2, 1, 3, 2, 1]
-      #   peek [1, 2].p.seq(inf, 1)         #=> [2, 1, 2, 1, 2, 1, 2, 1, 2, 1]
       #
-      # @param repeats [Fixnum, Symbol] number or inf (defaut: 1)
+      # @param repeats [Fixnum] number (defaut: 1)
       # @param offset [Fixnum] (default: 0)
       # @return [Pattern]
       #
       def seq(repeats=1, offset=0)
-        unless (repeats.is_a?(Fixnum) && repeats >= 0) || repeats == inf
-          fail ArgumentError, "repeats must be a non-negative Fixnum or inf"
+        unless repeats.is_a?(Fixnum) && repeats >= 0
+          fail ArgumentError, "repeats must be a non-negative Fixnum"
         end
+
         unless offset.is_a?(Fixnum) && offset >= 0
           fail ArgumentError, "offset must be a non-negative Fixnum"
         end
@@ -227,14 +192,12 @@ module Xi
       def bounce(skip_extremes=true)
         return self if size == 0 || size == 1
 
-        Pattern.new(self, size: size * 2 - 1) { |y|
-          last_id = 0
-          each.with_index { |v, i|
-            y << v
-            last_id = i
-          }
+        new_size = skip_extremes ? size * 2 - 2 : size * 2
+        Pattern.new(self, size: new_size) { |y|
+          each { |v| y << v }
+          last_i = size - 1
           reverse_each.with_index { |v, i|
-            y << v unless skip_extremes && (i == 0 || i == last_id)
+            y << v unless skip_extremes && (i == 0 || i == last_i)
           }
         }
       end
@@ -254,12 +217,7 @@ module Xi
       # @return [Pattern]
       #
       def normalize(min, max)
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:-) ? (v - min) / (max - min) : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:-) ? (v - min) / (max - min) : v }
       end
 
       # Scales a pattern of normalized values (0..1) to a custom range
@@ -279,12 +237,7 @@ module Xi
       # @return [Pattern]
       #
       def denormalize(min, max)
-        Pattern.new(self) { |y|
-          each_event { |e|
-            v = e.value
-            y << E[(v.respond_to?(:*) ? (max - min) * v + min : v), e.start, e.duration]
-          }
-        }
+        map { |v| v.respond_to?(:*) ? (max - min) * v + min : v }
       end
 
       # Scale from one range of values to another range of values
@@ -308,18 +261,17 @@ module Xi
       #
       # It is the inverse operation of #accelerate
       #
+      # @see #accelerate
+      #
       # @example
       #   peek_events %w(a b c d).p([1/4, 1/8, 1/6]).decelerate(2)
       #     #=> [E["a",0,1/2], E["b",1/2,1/4], E["c",3/4,1/3], E["d",13/12,1/2]]
       #
       # @param num [Numeric]
       # @return [Pattern]
-      # @see #accelerate
       #
       def decelerate(num)
-        Pattern.new(self) { |y|
-          each_event { |e| y << E[e.value, e.start * num, e.duration * num] }
-        }
+        Pattern.new(self, delta: delta.p * 2)
       end
 
       # Advance a pattern by shrinking start and duration of events
@@ -327,18 +279,17 @@ module Xi
       #
       # It is the inverse operation of #decelerate
       #
+      # @see #decelerate
+      #
       # @example
       #   peek_events %w(a b c d).p([1/2, 1/4]).accelerate(2)
       #     #=> [E["a",0,1/4], E["b",1/4,1/8], E["c",3/8,1/4], E["d",5/8,1/8]]
       #
       # @param num [Numeric]
       # @return [Pattern]
-      # @see #decelerate
       #
       def accelerate(num)
-        Pattern.new(self) { |y|
-          each_event { |e| y << E[e.value, e.start / num, e.duration / num] }
-        }
+        Pattern.new(self, delta: delta.p / 2)
       end
 
       # Based on +probability+, it yields original value or nil
@@ -362,12 +313,12 @@ module Xi
         prob_pat = probability.p
 
         if prob_pat.infinite?
-          fail ArgumentError, 'times must be a finite pattern'
+          fail ArgumentError, 'times must be finite'
         end
 
-        Pattern.new(self, size: size * prob_pat.reduce(:+)) do |y|
+        Pattern.new(self, size: size * prob_pat.size) do |y|
           prob_pat.each do |prob|
-            each { |v| y << (rand < prob ? v : nil) }
+            each { |v| y << (Kernel.rand < prob ? v : nil) }
           end
         end
       end
@@ -393,10 +344,10 @@ module Xi
         times_pat = times.p
 
         if times_pat.infinite?
-          fail ArgumentError, 'times must be a finite pattern'
+          fail ArgumentError, 'times must be finite'
         end
 
-        Pattern.new(self, size: size * times_pat.reduce(:+)) do |y|
+        Pattern.new(self, size: size * times_pat.size) do |y|
           times_pat.each do |t|
             each { |v| t.times { y << v } }
           end
@@ -448,6 +399,68 @@ module Xi
       #
       def shuf(repeats=1)
         P.shuf(self, repeats)
+      end
+
+      # Returns a new Pattern where values for which +test_proc+ are true are
+      # yielded as a pattern to another +block+
+      #
+      # These values are grouped together as a "subpattern", then yielded to
+      # +block+ for further transformation and finally spliced into the original
+      # pattern.  +test_proc+ will be called with +value+, +start+ and +duration+
+      # as parameters.
+      #
+      # @param test_proc [#call]
+      # @yield [Pattern] subpattern
+      # @yieldreturn [Pattern] transformed subpattern
+      # @return [Pattern]
+      #
+      def when(test_proc, &block)
+        Pattern.new(self) do |y|
+          each_event do |v, s, d, i|
+            if test_proc.call(v, s, d, i)
+              new_pat = block.call(self)
+              new_pat.each_event(s)
+                .take_while { |_, s_, d_| s_ + d_ <= s + d }
+                .each { |v_, _| y << v_ }
+            else
+              y << v
+            end
+          end
+        end
+      end
+
+      # Splices a new pattern returned from +block+ every +n+ cycles
+      #
+      # @see #every_iter
+      #
+      # @param n [Numeric]
+      # @yield [Pattern] subpattern
+      # @yieldreturn [Pattern] transformed subpattern
+      # @return [Pattern]
+      #
+      def every(n, &block)
+        fn = proc { |_, s, _|
+          m = (s + 1) % n
+          m >= 0 && m < 1
+        }
+        self.when(fn, &block)
+      end
+
+      # Splices a new pattern returned from +block+ every +n+ iterations
+      #
+      # @see #every
+      #
+      # @param n [Numeric]
+      # @yield [Pattern] subpattern
+      # @yieldreturn [Pattern] transformed subpattern
+      # @return [Pattern]
+      #
+      def every_iter(n, &block)
+        fn = proc { |_, _, _, i|
+          m = (i + 1) % n
+          m >= 0 && m < 1
+        }
+        self.when(fn, &block)
       end
     end
   end

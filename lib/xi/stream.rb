@@ -3,7 +3,7 @@ require 'set'
 
 module Xi
   class Stream
-    attr_reader :clock, :opts, :source, :state, :event_duration, :gate
+    attr_reader :clock, :opts, :source, :state, :delta, :gate
 
     DEFAULT_PARAMS = {
       degree: 0,
@@ -30,11 +30,11 @@ module Xi
       self.clock = clock
     end
 
-    def set(event_duration: nil, gate: nil, **source)
+    def set(delta: nil, gate: nil, **source)
       @mutex.synchronize do
         @source = source
         @gate = gate if gate
-        @event_duration = event_duration if event_duration
+        @delta = delta if delta
         update_internal_structures
       end
       play
@@ -42,9 +42,9 @@ module Xi
     end
     alias_method :call, :set
 
-    def event_duration=(new_value)
+    def delta=(new_value)
       @mutex.synchronize do
-        @event_duration = new_value
+        @delta = new_value
         update_internal_structures
       end
     end
@@ -103,7 +103,6 @@ module Xi
       @mutex.synchronize do
         @changed_params.clear
 
-        forward_enums(now, cps) if @must_forward
         gate_off = gate_off_old_sound_objects(now)
         gate_on = play_enums(now, cps)
 
@@ -131,36 +130,15 @@ module Xi
       @state.select { |k, _| @changed_params.include?(k) }
     end
 
-    def forward_enums(now, cps)
-      @enums.each do |p, (enum, total_dur)|
-        next if total_dur == 0
-
-        cur_pos = (now * cps) % total_dur
-        start_ts = now - (cur_pos / cps)
-
-        loop do
-          next_ev = enum.peek
-          distance = (cur_pos - next_ev.start) % total_dur
-
-          @prev_end[p] = @clock.init_ts + start_ts + (next_ev.end / cps)
-          enum.next
-
-          break if distance <= next_ev.duration
-        end
-      end
-
-      @must_forward = false
-    end
-
     def gate_off_old_sound_objects(now)
       gate_off = []
 
       # Check if there are any currently playing sound objects that
       # must be gated off
-      @playing_sound_objects.dup.each do |end_pos, h|
+      @playing_sound_objects.dup.each do |start_pos, h|
         if now + @clock.init_ts >= h[:at] - latency_sec
           gate_off << h
-          @playing_sound_objects.delete(end_pos)
+          @playing_sound_objects.delete(start_pos)
         end
       end
 
@@ -170,43 +148,45 @@ module Xi
     def play_enums(now, cps)
       gate_on = []
 
-      @enums.each do |p, (enum, total_dur)|
-        next if total_dur == 0
+      @enums.each do |p, enum|
+        next unless enum.next?
 
-        cur_pos = (now * cps) % total_dur
-        start_ts = now - (cur_pos / cps)
+        cur_pos = now * cps
+        n_value, n_start, n_dur = enum.peek
 
-        next_ev = enum.peek
+        # Do we need to play next event? If not, skip this parameter value
+        if cur_pos >= n_start - latency_sec
+          # If it is too late to play this event, skip it
+          if cur_pos < n_start
+            starts_at = @clock.init_ts + (n_start / cps)
 
-        # Do we need to play next event now? If not, skip this parameter
-        if (@prev_end[p].nil? || now + @clock.init_ts >= @prev_end[p]) &&
-            cur_pos >= next_ev.start - latency_sec
+            # Update state based on pattern value
+            # TODO: Pass as parameter exact time: starts_at
+            update_state(p, n_value)
+            transform_state
 
-          # Update state based on pattern value
-          # TODO: Pass as parameter exact time (start_ts + next_ev.start)
-          update_state(p, next_ev.value)
-          transform_state
+            # If a gate parameter changed, create a new sound object
+            if p == @gate
+              n_end = n_start + n_dur
+              ends_at = @clock.init_ts + (n_end / cps)
 
-          # If a gate parameter changed, create a new sound object
-          if p == @gate
-            new_so_ids = Array(next_ev.value)
-              .size.times.map { new_sound_object_id }
+              # If these sounds objects are new,
+              # consider them as new "gate on" events.
+              unless @playing_sound_objects.key?(n_start)
+                new_so_ids = Array(n_value)
+                  .size.times.map { new_sound_object_id }
 
-            gate_on << {
-              so_ids: new_so_ids,
-              at: @clock.init_ts + start_ts + (next_ev.start / cps),
-            }
+                gate_on << {so_ids: new_so_ids, at: starts_at}
+                @playing_sound_objects[n_start] = {so_ids: new_so_ids}
+              end
 
-            @playing_sound_objects[rand(100000)] = {
-              so_ids: new_so_ids,
-              duration: total_dur,
-              at: @clock.init_ts + start_ts + (next_ev.end / cps),
-            }
+              # Set (or update) ends_at timestamp
+              @playing_sound_objects[n_start][:at] = ends_at
+            end
           end
 
           # Because we already processed event, advance enumerator
-          next_ev = enum.next
-          @prev_end[p] = @clock.init_ts + start_ts + (next_ev.end / cps)
+          enum.next
         end
       end
 
@@ -250,11 +230,8 @@ module Xi
     end
 
     def update_internal_structures
-      @must_forward = true
-      @enums = @source.map { |k, v|
-        pat = v.p(@event_duration)
-        [k, [enum_for(:loop_events, pat), pat.total_duration]]
-      }.to_h
+      cycle = @clock.current_cycle
+      @enums = @source.map { |k, v| [k, v.p(@delta).each_event(cycle)] }.to_h
     end
 
     def do_gate_on_change(ss)
@@ -283,10 +260,6 @@ module Xi
 
     def state_changed?
       !@changed_params.empty?
-    end
-
-    def loop_events(pattern)
-      loop { pattern.each_event { |e| yield e } }
     end
 
     def latency_sec
