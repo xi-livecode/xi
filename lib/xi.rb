@@ -3,6 +3,7 @@ require 'xi/core_ext'
 require 'xi/pattern'
 require 'xi/stream'
 require 'xi/clock'
+require 'xi/bjorklund'
 
 def inf
   Float::INFINITY
@@ -41,6 +42,10 @@ module Xi
 
     def peek_events(pattern, limit=10, *args)
       pattern.peek(*args)
+    end
+
+    def e(n, m, value=nil)
+      Bjorklund.new([n, m].min, [n, m].max, value)
     end
 
     def method_missing(method, backend=nil, **opts)
