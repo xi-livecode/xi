@@ -130,8 +130,8 @@ module Xi
     # @return [Pattern]
     #
     def p(*delta, **metadata)
-      delta = delta.empty? ? @delta : delta
-      Pattern.new(@source, delta: delta, **@metadata.merge(metadata))
+      delta = delta.compact.empty? ? @delta : delta
+      Pattern.new(@source, delta: delta, size: size, **@metadata.merge(metadata))
     end
 
     # Returns true if pattern is infinite
