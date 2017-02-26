@@ -1,4 +1,4 @@
-module Xi
+module Xi::CoreExt
   module Numeric
     def midi_to_cps
       440 * (2 ** ((self - 69) / 12.0))
@@ -22,13 +22,13 @@ module Xi
 end
 
 class Fixnum
-  include Xi::Numeric
+  include Xi::CoreExt::Numeric
 end
 
 class Float
-  include Xi::Numeric
+  include Xi::CoreExt::Numeric
 end
 
 class Rational
-  include Xi::Numeric
+  include Xi::CoreExt::Numeric
 end
