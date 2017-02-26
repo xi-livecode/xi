@@ -94,10 +94,16 @@ module Xi
         @metadata = {}
       end
 
+      # Flatten source if it is a pattern
+      @source = @source.source if @source.is_a?(Pattern)
+
       # Override or merge custom attributes if they were specified
       @size = size if size
       @delta = delta if delta
       @metadata.merge!(metadata)
+
+      # Flatten delta values to an array, if it is an enumerable or pattern
+      @delta = @delta.to_a if @delta.respond_to?(:to_a)
 
       # Set duration based on delta values
       @duration = delta_values.reduce(:+)

@@ -36,7 +36,7 @@ describe Xi::Pattern do
       @p = Xi::Pattern.new(p1)
 
       assert_instance_of Xi::Pattern, @p
-      assert_equal p1, @p.source
+      assert_equal p1.source, @p.source
       assert_equal [1, 2, 3], @p.take_values(3)
     end
 
@@ -98,7 +98,7 @@ describe Xi::Pattern do
       assert_equal 2, @p.delta
       assert_equal 1/2, @p.p(1/2).delta
       assert_equal [1/4, 1/8, 1/16], @p.p(1/4, 1/8, 1/16).delta
-      assert_equal P[1,2,3], @p.p(P[1,2,3]).delta
+      assert_equal [1,2,3], @p.p(P[1,2,3]).delta
     end
 
     it 'accepts metadata as keyword arguments, and is merged with original' do
