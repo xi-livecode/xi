@@ -94,9 +94,11 @@ describe Xi::Pattern do
       assert_equal @p.p.source.object_id, @p.source.object_id
     end
 
-    it 'accepts event duration as first parameter, and overrides original' do
+    it 'accepts delta values as first parameter, and overrides original' do
       assert_equal 2, @p.delta
       assert_equal 1/2, @p.p(1/2).delta
+      assert_equal [1/4, 1/8, 1/16], @p.p(1/4, 1/8, 1/16).delta
+      assert_equal P[1,2,3], @p.p(P[1,2,3]).delta
     end
 
     it 'accepts metadata as keyword arguments, and is merged with original' do
@@ -105,101 +107,314 @@ describe Xi::Pattern do
     end
   end
 
-=begin
-  describe '#each' do
-    describe 'when source values are of other types' do
-      it 'enumerates events from its source' do
-        @p = Xi::Pattern.new([1, 2, 3])
+  describe '#finite? and #infinite?' do
+    it 'returns true or false whether pattern has a finite or infinite size' do
+      @p = Xi::Pattern.new(1..10)
+      assert @p.finite?
+      refute @p.infinite?
 
-        assert_equal [[1,0,1], [2,1,1], [3,2,1]], @p.each.take(3)
-      end
+      @p = Xi::Pattern.new { |y| y << rand }
+      refute @p.finite?
+      assert @p.infinite?
 
-      it 'enumerates events using +delta+ as duration and offset' do
-        @p = Xi::Pattern.new([1, 2], delta: 1/2)
-        assert_equal [[1,0,1/2], [2,1/2,1/2]], @p.each.take(2)
+      @p = Xi::Pattern.new(size: 4) { |y| y << rand }
+      assert @p.finite?
+      refute @p.infinite?
 
-        @p = Xi::Pattern.new([1, 2], delta: 1/4)
-        assert_equal [[1,0,1/4], [2,1/4,1/4]], @p.each.take(2)
-      end
+      @p = Xi::Pattern.new(1..inf)
+      refute @p.finite?
+      assert @p.infinite?
     end
+  end
 
-    describe 'when source values are Patterns' do
-      it 'embeds patterns by taking only its values, ignoring start and duration' do
-        @p = Xi::Pattern.new([1, 2, Xi::Pattern.new([10, 20]), 3])
-
-        assert_equal [[1,0,1], [2,1,1], [10,2,1], [20,3,1], [3,4,1]],
-          @p.each.take(5)
-      end
-    end
-
-    describe 'when source values are Events' do
-      it 'enumerates the same events, preserving its attributes' do
-        orig_p = Xi::Pattern.new([:a, :b, :c])
-          .map_events { |e| Xi::Event.new(e.value, e.start, e.duration * 0.5) }
-
-        assert_equal orig_p.each_event.to_a, orig_p.p.each_event.to_a
-      end
-    end
-
+  describe '#each_event' do
     describe 'with no block' do
       it 'returns an Enumerator' do
         assert_instance_of Enumerator, [].p.each_event
       end
     end
 
-    it 'preserves source' do
-      @p = [1, 2, 3].p
-      assert_equal @p.to_a, @p.to_a
+    describe 'when source responds to #call (e.g. a block)' do
+      it 'yields events and current iteration' do
+        @p = Xi::Pattern.new(size: 3) { |y| (1..3).each { |v| y << v } }
+
+        assert_equal [[1, 0, 1, 0],
+                      [2, 1, 1, 0],
+                      [3, 2, 1, 0],
+                      [1, 3, 1, 1]], @p.each_event.take(4)
+
+        assert_equal [[1, 3, 1, 1],
+                      [2, 4, 1, 1],
+                      [3, 5, 1, 1],
+                      [1, 6, 1, 2]], @p.each_event(2.97).take(4)
+      end
+    end
+
+    describe 'when source responds to #[] and #size (e.g. an Array)' do
+      it 'yields events and current iteration' do
+        @p = Xi::Pattern.new([1, 2], delta: 1/4)
+
+        assert_equal [[1,   0, 1/4, 0],
+                      [2, 1/4, 1/4, 0],
+                      [1, 1/2, 1/4, 1],
+                      [2, 3/4, 1/4, 1]], @p.each_event.take(4)
+
+        assert_equal [[2, 1/4, 1/4, 0],
+                      [1, 1/2, 1/4, 1],
+                      [2, 3/4, 1/4, 1],
+                      [1,   1, 1/4, 2]], @p.each_event(0.1).take(4)
+
+        assert_equal [[1, 1/2, 1/4, 1],
+                      [2, 3/4, 1/4, 1],
+                      [1,   1, 1/4, 2],
+                      [2, 5/4, 1/4, 2]], @p.each_event(1/4 + 0.1).take(4)
+
+        @p = Xi::Pattern.new([:a, :b, :c], delta: [1/2, 1/4])
+
+        assert_equal [[:b,    42, 1/2, 18],
+                      [:c,  85/2, 1/4, 18],
+                      [:a, 171/4, 1/2, 19],
+                      [:b, 173/4, 1/4, 19]], @p.each_event(42).take(4)
+      end
+    end
+
+    describe 'when source responds to #each_event (e.g. a Pattern)' do
+      it 'yields events and current iteration' do
+        @p = Xi::Pattern.new([1, 2].p, delta: 1/4)
+
+        assert_equal [[1, 1/2, 1/4, 1],
+                      [2, 3/4, 1/4, 1],
+                      [1,   1, 1/4, 2],
+                      [2, 5/4, 1/4, 2]], @p.each_event(1/4 + 0.1).take(4)
+      end
     end
   end
 
-  describe '#map_events' do
+  describe '#each_delta' do
+    describe 'with no block' do
+      it 'returns an Enumerator' do
+        assert_instance_of Enumerator, [].p.each_delta
+      end
+    end
+
+    describe 'when delta is an Array' do
+      it 'yields next delta value for current +iteration+' do
+        @p = Xi::Pattern.new(%i(a b c), delta: [1, 2, 3])
+
+        assert_equal [1, 2, 3, 1], @p.each_delta.take(4)
+        assert_equal [2, 3, 1, 2], @p.each_delta(1).take(4)
+        assert_equal [2, 3, 1, 2], @p.each_delta(1.9).take(4)
+        assert_equal [3, 1, 2, 3], @p.each_delta(2).take(4)
+      end
+    end
+
+    describe 'when delta is a Pattern' do
+      it 'yields next delta value for current +iteration+' do
+        @p = Xi::Pattern.new(%i(a b c), delta: [1/2, 1/4].p * 2)
+
+        assert_equal [1, 1/2, 1, 1/2], @p.each_delta.take(4)
+        assert_equal [1/2, 1, 1/2, 1], @p.each_delta(1).take(4)
+      end
+    end
+
+    describe 'when delta is a Numeric' do
+      it 'yields next delta value for current +iteration+' do
+        @p = Xi::Pattern.new(%i(a b c), delta: 2)
+
+        assert_equal [2, 2, 2], @p.each_delta.take(3)
+        assert_equal [2, 2, 2], @p.each_delta(1).take(3)
+      end
+    end
+  end
+
+  describe '#each' do
+    it 'returns an Enumerator if block is not present' do
+      assert_instance_of Enumerator, [].p.each
+    end
+
+    it 'returns all values from the first iteration' do
+      @p = Xi::Pattern.new([1, 2, 3])
+      assert_equal [1, 2, 3], @p.each.to_a
+
+      @p = [1, 2, 3].p + [4, 5, 6].p
+      assert_equal [1, 2, 3, 4, 5, 6], @p.each.to_a
+    end
+  end
+
+  describe '#reverse_each' do
+    it 'returns an Enumerator if block is not present' do
+      assert_instance_of Enumerator, [].p.each
+    end
+
+    it 'returns all values from the first iteration in reverse order' do
+      @p = Xi::Pattern.new([1, 2, 3])
+      assert_equal [3, 2, 1], @p.reverse_each.to_a
+
+      @p = [1, 2, 3].p + [4, 5, 6].p
+      assert_equal [6, 5, 4, 3, 2, 1], @p.reverse_each.to_a
+    end
+  end
+
+  describe '#to_a' do
+    it 'returns an Array of values from the first iteration' do
+      assert_equal [1, 2, 3], Xi::Pattern.new([1, 2, 3]).to_a
+    end
+
+    it 'raises an error if pattern is infinite' do
+      assert_raises(StandardError) do
+        Xi::Pattern.new(1..inf).to_a
+      end
+    end
+  end
+
+  describe '#to_events' do
+    it 'returns an Array of events from the first iteration' do
+      assert_equal [[1, 0, 1, 0],
+                    [2, 1, 1, 0],
+                    [3, 2, 1, 0]], Xi::Pattern.new([1, 2, 3]).to_events
+    end
+
+    it 'raises an error if pattern is infinite' do
+      assert_raises(StandardError) do
+        Xi::Pattern.new(1..inf).to_events
+      end
+    end
+  end
+
+  describe '#map' do
     before do
-      @p = Xi::Pattern.new([:a, :b])
+      @p = Xi::Pattern.new([:a, :b], delta: 1/2)
     end
 
     it 'returns a new Pattern with events mapped to the block' do
-      new_p = @p.map_events { |e| E[e.value, e.start * 2, e.duration / 2] }
+      new_p = @p.map { |v, s, d, i| "#{v}#{(s * 10).to_i}" }
 
       assert_instance_of Xi::Pattern, new_p
-      assert_equal [E[:a,0,1/2], E[:b,2,1/2]], new_p.to_events
+      assert_equal [["a0",0,1/2,0], ["b5",1/2,1/2,0]], new_p.to_events
     end
 
     it 'is an alias of #collect' do
-      assert_equal [E[:a,0,1/2], E[:b,2,1/2]],
-        @p.collect_events { |e| E[e.value, e.start * 2, e.duration / 2] }.to_events
+      assert_equal [["a0",0,1/2,0], ["b5",1/2,1/2,0]],
+        @p.collect { |v, s, d, i| "#{v}#{(s * 10).to_i}" }.to_events
     end
   end
 
-  describe '#select_events' do
+  describe '#select' do
     before do
-      @p = Xi::Pattern.new(1..4)
+      @p = Xi::Pattern.new((1..4).to_a)
     end
 
-    it 'returns a new Pattern with events sellected from the block' do
-      new_p = @p.select_events { |e| e.value % 2 == 0 }
+    it 'returns a new Pattern with events selected from the block' do
+      new_p = @p.select { |v| v % 2 == 0 }
 
       assert_instance_of Xi::Pattern, new_p
-      assert_equal [E[2,1], E[4,3]], new_p.to_events
+      assert_equal [[2, 0, 1, 0],
+                    [4, 1, 1, 0],
+                    [2, 2, 1, 0],
+                    [4, 3, 1, 0]], new_p.to_events
     end
 
     it 'is an alias of #find_all' do
-      assert_equal [E[2,1], E[4,3]],
-        @p.find_all_events { |e| e.value % 2 == 0 }.to_events
+      assert_equal [[2, 0, 1, 0],
+                    [4, 1, 1, 0],
+                    [2, 2, 1, 0],
+                    [4, 3, 1, 0]], @p.find_all { |v| v % 2 == 0 }.to_events
     end
   end
 
-  describe '#reject_events' do
+  describe '#reject' do
     before do
-      @p = Xi::Pattern.new(1..4)
+      @p = Xi::Pattern.new((1..4).to_a)
     end
 
     it 'returns a new Pattern with events rejected from the block' do
-      new_p = @p.reject_events { |e| e.value % 2 == 0 }
+      new_p = @p.reject { |v| v % 2 == 0 }
 
       assert_instance_of Xi::Pattern, new_p
-      assert_equal [E[1,0], E[3,2]], new_p.to_events
+      assert_equal [[1, 0, 1, 0],
+                    [3, 1, 1, 0],
+                    [1, 2, 1, 0],
+                    [3, 3, 1, 0]], new_p.to_events
     end
   end
-=end
+
+  describe '#take' do
+    before do
+      @p = Xi::Pattern.new([1, 2], delta: 2)
+    end
+
+    it 'returns the first +n+ events, starting from +cycle+' do
+      assert_equal [[1, 0, 2, 0],
+                    [2, 2, 2, 0],
+                    [1, 4, 2, 1],
+                    [2, 6, 2, 1]], @p.take(4)
+
+      assert_equal [[2, 2, 2, 0],
+                    [1, 4, 2, 1],
+                    [2, 6, 2, 1]], @p.take(3, 1.5)
+    end
+  end
+
+  describe '#take_values' do
+    before do
+      @p = Xi::Pattern.new([1, 2], delta: 2)
+    end
+
+    it 'returns the first +n+ events, starting from +cycle+' do
+      assert_equal [1, 2, 1, 2], @p.take_values(4)
+      assert_equal [2, 1, 2, 1], @p.take_values(4, 1.5)
+    end
+  end
+
+  describe '#first' do
+    before do
+      @p = Xi::Pattern.new([1, 2], delta: 2)
+    end
+
+    it 'returns first event if +n+ is nil' do
+      assert_equal [1, 0, 2, 0], @p.first
+    end
+
+    it 'returns first +n+ events, like #take' do
+      assert_equal @p.take(6), @p.first(6)
+    end
+  end
+
+  describe '#iteration_size' do
+    describe 'when pattern is infinite' do
+      before do
+        @p = Xi::Pattern.new(1..inf)
+      end
+
+      it 'returns the size of delta' do
+        assert_equal 1, @p.iteration_size
+        assert_equal 3, @p.p(1, 2, 3).iteration_size
+        assert_equal 4, @p.p([1, 2].p + [3, 4].p).iteration_size
+      end
+    end
+
+    describe 'when pattern is finite' do
+      before do
+        @p = Xi::Pattern.new([1, 2])
+      end
+
+      it 'returns the LCM between pattern size and delta size' do
+        assert_equal 2, @p.iteration_size
+        assert_equal 6, @p.p(1, 2, 3).iteration_size
+        assert_equal 10, @p.p([1, 2].p + [3, 4, 5].p).iteration_size
+      end
+    end
+  end
+
+  describe '#duration' do
+    before do
+      @p = Xi::Pattern.new([1, 2])
+    end
+
+    it 'returns the sum of delta values of each pattern value in a single iteration' do
+      assert_equal 2, @p.duration
+      assert_equal 12, @p.p(1, 2, 3).duration
+      assert_equal 30, @p.p([1, 2].p + [3, 4, 5].p).duration
+    end
+  end
 end

@@ -2,7 +2,7 @@ require 'xi/pattern'
 
 module Xi
   module Pattern::Enumerable
-    def p(delta=nil, **metadata)
+    def p(*delta, **metadata)
       Pattern.new(self.to_a, delta: delta, **metadata)
     end
   end

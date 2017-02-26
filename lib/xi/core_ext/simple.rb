@@ -2,8 +2,8 @@ require 'xi/pattern'
 
 module Xi
   module Pattern::Simple
-    def p(delta=nil, **metadata)
-      [self].p(delta, metadata)
+    def p(*delta, **metadata)
+      [self].p(*delta, **metadata)
     end
   end
 end

@@ -60,7 +60,7 @@ module Xi
     #
     # @param source [Array]
     # @param size [Fixnum] number of events per iteration
-    # @param delta [Numeric] event delta
+    # @param delta [Numeric, Array<Numeric>, Pattern<Numeric>] event delta
     # @param metadata [Hash]
     # @yield [yielder, delta] yielder and event delta
     # @yieldreturn [value, start, duration]
@@ -74,6 +74,9 @@ module Xi
       if delta && delta.respond_to?(:size) && !(delta.size < Float::INFINITY)
         fail ArgumentError, 'delta cannot be infinite'
       end
+
+      # If delta is an array of 1 or 0 values, flatten array
+      delta = delta.first if delta.is_a?(Array) && delta.size <= 1
 
       # Block takes precedence as source, even though +source+ can be used to
       # infer attributes
@@ -120,11 +123,9 @@ module Xi
     # @param metadata [Hash]
     # @return [Pattern]
     #
-    def p(delta=nil, size: nil, **metadata)
-      Pattern.new(@source,
-                  size: size || @size,
-                  delta: delta || @delta,
-                  **@metadata.merge(metadata))
+    def p(*delta, **metadata)
+      delta = delta.empty? ? @delta : delta
+      Pattern.new(@source, delta: delta, **@metadata.merge(metadata))
     end
 
     # Returns true if pattern is infinite
@@ -233,7 +234,7 @@ module Xi
           delta = delta_enum.next
         end
       else
-        fail 'invalid source'
+        fail StandardError, 'invalid source'
       end
     end
 
@@ -247,8 +248,8 @@ module Xi
     # @yield [d] duration
     # @return [Enumerator]
     #
-    def each_delta(cycle=0)
-      return enum_for(__method__, cycle) unless block_given?
+    def each_delta(index=0)
+      return enum_for(__method__, index) unless block_given?
 
       delta = @delta
 
@@ -256,7 +257,7 @@ module Xi
         size = delta.size
         return if size == 0
 
-        start = cycle.floor
+        start = index.floor
         i = start % size
         loop do
           yield delta[i]
@@ -264,7 +265,7 @@ module Xi
           start += 1
         end
       elsif delta.is_a?(Pattern)
-        delta.each_event(cycle) { |v, _| yield v }
+        delta.each_event(index) { |v, _| yield v }
       else
         loop { yield delta }
       end
@@ -308,7 +309,7 @@ module Xi
     # @see #to_events
     #
     def to_a
-      fail 'pattern is infinite' if infinite?
+      fail StandardError, 'pattern is infinite' if infinite?
       each.to_a
     end
 
@@ -321,7 +322,7 @@ module Xi
     # @see #to_a
     #
     def to_events
-      fail 'pattern is infinite' if infinite?
+      fail StandardError, 'pattern is infinite' if infinite?
       each_event.take(size)
     end
 
@@ -361,7 +362,7 @@ module Xi
 
       Pattern.new(self) do |y, d|
         each_event do |v, s, ed, i|
-          y << [v, s, ed, i] if yield(v, s, ed, i)
+          y << v if yield(v, s, ed, i)
         end
       end
     end
