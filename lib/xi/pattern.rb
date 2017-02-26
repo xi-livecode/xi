@@ -121,17 +121,16 @@ module Xi
       new(args, **kwargs)
     end
 
-    # Returns a new Pattern with the same +source+, but with +delta+, +size+
-    # overriden and +metadata+ merged.
+    # Returns a new Pattern with the same +source+, but with +delta+ overriden
+    # and +metadata+ merged.
     #
-    # @param delta [Numeric]
-    # @param size [Fixnum]
+    # @param delta [Array<Numeric>, Pattern<Numeric>, Numeric]
     # @param metadata [Hash]
     # @return [Pattern]
     #
     def p(*delta, **metadata)
       delta = delta.compact.empty? ? @delta : delta
-      Pattern.new(@source, delta: delta, size: size, **@metadata.merge(metadata))
+      Pattern.new(@source, delta: delta, size: @size, **@metadata.merge(metadata))
     end
 
     # Returns true if pattern is infinite
@@ -250,7 +249,7 @@ module Xi
     # event in pattern occurs in time.  If no block is given, an Enumerator is
     # returned instead.
     #
-    # @param cycle [Numeric]
+    # @param index [Numeric]
     # @yield [d] duration
     # @return [Enumerator]
     #
@@ -395,7 +394,6 @@ module Xi
     #
     # @param n [Fixnum]
     # @param cycle [Numeric]
-    # @param dur [Numeric]
     # @return [Array] values
     #
     def take(n, cycle=0)
