@@ -329,14 +329,14 @@ module Xi
     # Returns a new Pattern with the results of running +block+ once for every
     # value in +self+
     #
-    # If no block is given, the same Pattern is returned.
+    # If no block is given, an Enumerator is returned.
     #
     # @yield [v, s, d, i] value, start, duration and iteration
     # @yieldreturn [v, s, d] value, start (optional) and duration (optional)
     # @return [Pattern]
     #
     def map
-      return self unless block_given?
+      return enum_for(__method__) unless block_given?
 
       Pattern.new(self) do |y, d|
         each_event do |v, s, ed, i|
@@ -349,7 +349,7 @@ module Xi
     # Returns a Pattern containing all events of +self+ for which +block+ is
     # true.
     #
-    # If no block is given, the same Pattern is returned.
+    # If no block is given, an Enumerator is returned.
     #
     # @see Pattern#reject
     #
@@ -358,7 +358,7 @@ module Xi
     # @return [Pattern]
     #
     def select
-      return self unless block_given?
+      return enum_for(__method__) unless block_given?
 
       Pattern.new(self) do |y, d|
         each_event do |v, s, ed, i|
@@ -371,7 +371,7 @@ module Xi
     # Returns a Pattern containing all events of +self+ for which +block+
     # is false.
     #
-    # If no block is given, the same Pattern is returned.
+    # If no block is given, an Enumerator is returned.
     #
     # @see Pattern#select
     #
@@ -380,7 +380,7 @@ module Xi
     # @return [Pattern]
     #
     def reject
-      return self unless block_given?
+      return enum_for(__method__) unless block_given?
 
       select { |v, s, d, i| !yield(v, s, d, i) }
     end

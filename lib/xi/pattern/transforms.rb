@@ -271,7 +271,7 @@ module Xi
       # @return [Pattern]
       #
       def decelerate(num)
-        Pattern.new(self, delta: delta.p * 2)
+        Pattern.new(self, delta: delta.p * num)
       end
 
       # Advance a pattern by shrinking start and duration of events
@@ -289,7 +289,7 @@ module Xi
       # @return [Pattern]
       #
       def accelerate(num)
-        Pattern.new(self, delta: delta.p / 2)
+        Pattern.new(self, delta: delta.p / num)
       end
 
       # Based on +probability+, it yields original value or nil
