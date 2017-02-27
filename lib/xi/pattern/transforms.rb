@@ -404,6 +404,8 @@ module Xi
       # Returns a new Pattern where values for which +test_proc+ are true are
       # yielded as a pattern to another +block+
       #
+      # If no block is given, an Enumerator is returned.
+      #
       # These values are grouped together as a "subpattern", then yielded to
       # +block+ for further transformation and finally spliced into the original
       # pattern.  +test_proc+ will be called with +value+, +start+ and +duration+
@@ -412,9 +414,11 @@ module Xi
       # @param test_proc [#call]
       # @yield [Pattern] subpattern
       # @yieldreturn [Pattern] transformed subpattern
-      # @return [Pattern]
+      # @return [Pattern, Enumerator]
       #
       def when(test_proc, &block)
+        return enum_for(__method__, test_proc) if block.nil?
+
         Pattern.new(self) do |y|
           each_event do |v, s, d, i|
             if test_proc.call(v, s, d, i)
