@@ -35,6 +35,7 @@ module Xi
         @source = source
         @gate = gate if gate
         @delta = delta if delta
+        @reset = true unless @playing
         update_internal_structures
       end
       play
@@ -102,6 +103,8 @@ module Xi
 
       @mutex.synchronize do
         @changed_params.clear
+
+        update_all_state if @reset
 
         gate_off = gate_off_old_sound_objects(now)
         gate_on = play_enums(now, cps)
@@ -260,6 +263,14 @@ module Xi
 
     def state_changed?
       !@changed_params.empty?
+    end
+
+    def update_all_state
+      @enums.each do |p, enum|
+        n_value, _ = enum.peek
+        update_state(p, n_value)
+      end
+      @reset = false
     end
 
     def latency_sec
