@@ -2,6 +2,8 @@
 # https://github.com/nebs/bjorklund-euclidean-rhythms
 #
 class Xi::Bjorklund
+  attr_reader :pulses, :slots, :value
+
   def initialize(pulses, slots, value=nil)
     @pulses = pulses.to_i
     @slots = slots.to_i
