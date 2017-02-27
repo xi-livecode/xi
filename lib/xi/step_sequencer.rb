@@ -6,8 +6,8 @@ class Xi::StepSequencer
     @values = values
   end
 
-  def p
-    build_pattern
+  def p(*args, **metadata)
+    build_pattern(**metadata)
   end
 
   def inspect
@@ -17,8 +17,8 @@ class Xi::StepSequencer
 
   private
 
-  def build_pattern
-    val_keys = self.values_per_key
+  def build_pattern(**metadata)
+    val_keys = values_per_key
 
     values_per_bar = @string.split('|').map { |bar|
       vs = bar.split(/\s*/).reject(&:empty?)
@@ -27,11 +27,11 @@ class Xi::StepSequencer
 
     delta = values_per_bar.map { |vs| [1 / vs.size] * vs.size }.flatten
 
-    Pattern.new(values_per_bar.flatten, delta: delta)
+    Pattern.new(values_per_bar.flatten, delta: delta, **metadata)
   end
 
   def values_per_key
-    self.keys.map.with_index { |k, i| [k, k == '.' ? nil : @values[i]] }.to_h
+    keys.map.with_index { |k, i| [k, k == '.' ? nil : @values[i]] }.to_h
   end
 
   def keys
