@@ -106,7 +106,7 @@ module Xi
       @delta = @delta.to_a if @delta.respond_to?(:to_a)
 
       # Set duration based on delta values
-      @duration = delta_values.reduce(:+)
+      @duration = delta_values.reduce(:+) || 0
     end
 
     # Create a new Pattern given an array of +args+
@@ -193,77 +193,7 @@ module Xi
     #
     def each_event(cycle=0)
       return enum_for(__method__, cycle) unless block_given?
-
-      size = @size
-      return if size == 0
-
-      iter_size = self.iteration_size
-      iter = (cycle / @duration).floor
-      start = iter * @duration
-      i = 0
-
-      delta_enum = self.each_delta(iter * iter_size)
-      delta = delta_enum.next
-      prev_ev = nil
-
-      if @source.respond_to?(:call)
-        loop do
-          yielder = ::Enumerator::Yielder.new do |value|
-            if start >= cycle
-              if prev_ev
-                yield prev_ev if start > cycle
-                prev_ev = nil
-              end
-              yield value, start, delta, iter
-            else
-              prev_ev = [value, start, delta, iter]
-            end
-
-            iter += 1 if i + 1 == iter_size
-            i = (i + 1) % iter_size
-            start += delta
-            delta = delta_enum.next
-          end
-
-          source.call(yielder, delta)
-        end
-      elsif @source.respond_to?(:each_event)
-        @source.each_event(start) do |v, _|
-          if start >= cycle
-            if prev_ev
-              yield prev_ev if start > cycle
-              prev_ev = nil
-            end
-            yield v, start, delta, iter
-          else
-            prev_ev = [v, start, delta, iter]
-          end
-
-          iter += 1 if i + 1 == iter_size
-          i = (i + 1) % iter_size
-          start += delta
-          delta = delta_enum.next
-        end
-      elsif @source.respond_to?(:[])
-        loop do
-          if start >= cycle
-            if prev_ev
-              yield prev_ev if start > cycle
-              prev_ev = nil
-            end
-            yield @source[i % size], start, delta, iter
-          else
-            prev_ev = [@source[i % size], start, delta, iter]
-          end
-
-          iter += 1 if i + 1 == iter_size
-          i = (i + 1) % iter_size
-          start += delta
-          delta = delta_enum.next
-        end
-      else
-        fail StandardError, 'invalid source'
-      end
+      EventEnumerator.new(self, cycle).each { |v, s, d, i| yield v, s, d, i }
     end
 
     # Calls the given block passing the delta of each value in pattern
@@ -497,6 +427,68 @@ module Xi
     end
 
     private
+
+    class EventEnumerator
+      def initialize(pattern, cycle)
+        @cycle = cycle
+
+        @source = pattern.source
+        @size = pattern.size
+        @iter_size = pattern.iteration_size
+
+        @iter = pattern.duration > 0 ? (cycle / pattern.duration).floor : 0
+        @delta_enum = pattern.each_delta(@iter * @iter_size)
+        @start = @iter * pattern.duration
+        @prev_ev = nil
+        @i = 0
+      end
+
+      def each(&block)
+        return enum_for(__method__, @cycle) unless block_given?
+
+        return if @size == 0
+
+        if @source.respond_to?(:call)
+          loop do
+            yielder = ::Enumerator::Yielder.new do |value|
+              each_block(value, &block)
+            end
+            @source.call(yielder, @delta_enum.peek)
+          end
+        elsif @source.respond_to?(:each_event)
+          @source.each_event(@start) do |value, _|
+            each_block(value, &block)
+          end
+        elsif @source.respond_to?(:[])
+          loop do
+            each_block(@source[@i % @size], &block)
+          end
+        else
+          fail StandardError, 'invalid source'
+        end
+      end
+
+      private
+
+      def each_block(value)
+        delta = @delta_enum.peek
+
+        if @start >= @cycle
+          if @prev_ev
+            yield @prev_ev if @start > @cycle
+            @prev_ev = nil
+          end
+          yield value, @start, delta, @iter
+        else
+          @prev_ev = [value, @start, delta, @iter]
+        end
+
+        @iter += 1 if @i + 1 == @iter_size
+        @i = (@i + 1) % @iter_size
+        @start += delta
+        @delta_enum.next
+      end
+    end
 
     def delta_values
       each_delta.take(iteration_size)
