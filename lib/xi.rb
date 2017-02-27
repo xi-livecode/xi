@@ -4,6 +4,7 @@ require 'xi/pattern'
 require 'xi/stream'
 require 'xi/clock'
 require 'xi/bjorklund'
+require 'xi/step_sequencer'
 
 def inf
   Float::INFINITY
@@ -46,6 +47,10 @@ module Xi
 
     def e(n, m, value=nil)
       Bjorklund.new([n, m].min, [n, m].max, value)
+    end
+
+    def s(str, *values)
+      StepSequencer.new(str, *values)
     end
 
     def method_missing(method, backend=nil, **opts)
