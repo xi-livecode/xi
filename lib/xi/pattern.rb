@@ -197,20 +197,27 @@ module Xi
       size = @size
       return if size == 0
 
-      iter_size = iteration_size
-      iter = (cycle / duration).floor
-      start = iter * duration
+      iter_size = self.iteration_size
+      iter = (cycle / @duration).floor
+      start = iter * @duration
       i = 0
 
-      delta_enum = each_delta(iter * iter_size)
+      delta_enum = self.each_delta(iter * iter_size)
       delta = delta_enum.next
+      prev_ev = nil
 
-      source = @source
-
-      if source.respond_to?(:call)
+      if @source.respond_to?(:call)
         loop do
           yielder = ::Enumerator::Yielder.new do |value|
-            yield value, start, delta, iter if start >= cycle
+            if start >= cycle
+              if prev_ev
+                yield prev_ev if start > cycle
+                prev_ev = nil
+              end
+              yield value, start, delta, iter
+            else
+              prev_ev = [value, start, delta, iter]
+            end
 
             iter += 1 if i + 1 == iter_size
             i = (i + 1) % iter_size
@@ -220,18 +227,34 @@ module Xi
 
           source.call(yielder, delta)
         end
-      elsif source.respond_to?(:each_event)
-        source.each_event(start) do |v, _|
-          yield v, start, delta, iter if start >= cycle
+      elsif @source.respond_to?(:each_event)
+        @source.each_event(start) do |v, _|
+          if start >= cycle
+            if prev_ev
+              yield prev_ev if start > cycle
+              prev_ev = nil
+            end
+            yield v, start, delta, iter
+          else
+            prev_ev = [v, start, delta, iter]
+          end
 
           iter += 1 if i + 1 == iter_size
           i = (i + 1) % iter_size
           start += delta
           delta = delta_enum.next
         end
-      elsif source.respond_to?(:[])
+      elsif @source.respond_to?(:[])
         loop do
-          yield source[i % size], start, delta, iter if start >= cycle
+          if start >= cycle
+            if prev_ev
+              yield prev_ev if start > cycle
+              prev_ev = nil
+            end
+            yield @source[i % size], start, delta, iter
+          else
+            prev_ev = [@source[i % size], start, delta, iter]
+          end
 
           iter += 1 if i + 1 == iter_size
           i = (i + 1) % iter_size

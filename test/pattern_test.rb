@@ -146,7 +146,12 @@ describe Xi::Pattern do
         assert_equal [[1, 3, 1, 1],
                       [2, 4, 1, 1],
                       [3, 5, 1, 1],
-                      [1, 6, 1, 2]], @p.each_event(2.97).take(4)
+                      [1, 6, 1, 2]], @p.each_event(3).take(4)
+
+        assert_equal [1, 3, 1, 1], @p.each_event(3.02).first
+        assert_equal [1, 3, 1, 1], @p.each_event(3.95).first
+        assert_equal [2, 4, 1, 1], @p.each_event(4).first
+        assert_equal [2, 4, 1, 1], @p.each_event(4.1).first
       end
     end
 
@@ -162,12 +167,12 @@ describe Xi::Pattern do
         assert_equal [[2, 1/4, 1/4, 0],
                       [1, 1/2, 1/4, 1],
                       [2, 3/4, 1/4, 1],
-                      [1,   1, 1/4, 2]], @p.each_event(0.1).take(4)
+                      [1,   1, 1/4, 2]], @p.each_event(0.26).take(4)
 
         assert_equal [[1, 1/2, 1/4, 1],
                       [2, 3/4, 1/4, 1],
                       [1,   1, 1/4, 2],
-                      [2, 5/4, 1/4, 2]], @p.each_event(1/4 + 0.1).take(4)
+                      [2, 5/4, 1/4, 2]], @p.each_event(1/2 + 0.1).take(4)
 
         @p = Xi::Pattern.new([:a, :b, :c], delta: [1/2, 1/4])
 
@@ -185,7 +190,7 @@ describe Xi::Pattern do
         assert_equal [[1, 1/2, 1/4, 1],
                       [2, 3/4, 1/4, 1],
                       [1,   1, 1/4, 2],
-                      [2, 5/4, 1/4, 2]], @p.each_event(1/4 + 0.1).take(4)
+                      [2, 5/4, 1/4, 2]], @p.each_event(1/2 + 0.1).take(4)
       end
     end
   end
@@ -351,7 +356,7 @@ describe Xi::Pattern do
 
       assert_equal [[2, 2, 2, 0],
                     [1, 4, 2, 1],
-                    [2, 6, 2, 1]], @p.take(3, 1.5)
+                    [2, 6, 2, 1]], @p.take(3, 2.1)
     end
   end
 
@@ -362,7 +367,7 @@ describe Xi::Pattern do
 
     it 'returns the first +n+ events, starting from +cycle+' do
       assert_equal [1, 2, 1, 2], @p.take_values(4)
-      assert_equal [2, 1, 2, 1], @p.take_values(4, 1.5)
+      assert_equal [2, 1, 2, 1], @p.take_values(4, 2.5)
     end
   end
 
