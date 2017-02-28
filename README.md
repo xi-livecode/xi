@@ -15,16 +15,25 @@ multiple known bugs, missing features, documentation and tests.
 ## Example
 
 ```ruby
-k = MIDI::Stream.new
+melody = [1,4,7,8,9]
+scale = [Scale.iwato, Scale.jiao]
 
-k.set degree: [0, 3, 5, 7],
-      octave: [1, 2],
-      scale: [Scale.egyptian],
-      voice: (0..6).p.scale(0, 6, 0, 127),
-      vel: [30, 25, 20].p + 20,
-      cutoff: P.sin1(32, 2) * 128,
-      delay_feedback: 1/2 * 128,
-      delay_time: [0, 0x7f].p(1/16)
+fm.set degree: melody.p(1/2,1/8,1/8,1/8,1/16,1/8,1/8).seq(2),
+       gate: :degree,
+       detune: [0.1, 0.4, 0.4],
+       sustain: [1,2,3,10],
+       accelerate: [0.5, 0, 0.1],
+       octave: [3,4,5,6].p(1/3),
+       scale: scale.p(1/2),
+       amp: P.new { |y| y << rand * 0.2 + 0.8 }.p(1/2)
+
+kick.set freq: s("xi.x .ix. | xi.x xx.x", 70, 200), amp: 0.8, gate: :freq
+
+clap.set n: s("..x. xyz. .x.. .xyx", 60, 61, 60).p.decelerate(2),
+         gate: :n,
+         amp: 0.35,
+         pan: P.sin(16, 2) * 0.6,
+         sustain: 0.25
 ```
 
 ## Installation
@@ -64,8 +73,9 @@ Then:
 
     $ cd xi
     $ bundle install
+    $ rake install
 
-You're done! Fire up the REPL from `bin/xi`.
+You're done! Fire up the REPL using `xi`.
 
 ## Development
 
@@ -77,6 +87,9 @@ release a new version, update the version number in `version.rb`, and then run
 `bundle exec rake release`, which will create a git tag for the version, push
 git commits and tags, and push the `.gem` file to
 [rubygems.org](https://rubygems.org).
+
+You can also try things on the REPL without installing the gem on your machine
+by doing `bundle exec bin/xi`.
 
 ## Contributing
 
