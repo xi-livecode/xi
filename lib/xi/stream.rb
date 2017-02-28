@@ -151,18 +151,23 @@ module Xi
     def play_enums(now, cps)
       gate_on = []
 
+      @prev_ts ||= {}
+      @prev_delta ||= {}
+
       @enums.each do |p, enum|
         next unless enum.next?
 
-        cur_pos = now * cps
         n_value, n_start, n_dur = enum.peek
 
-        # Do we need to play next event? If not, skip this parameter value
-        if cur_pos >= n_start - latency_sec
-          # If it is too late to play this event, skip it
-          if cur_pos < n_start
-            starts_at = @clock.init_ts + (n_start / cps)
+        @prev_ts[p]    ||= n_start / cps
+        @prev_delta[p] ||= n_dur
 
+        next_start = @prev_ts[p] + (@prev_delta[p] / cps)
+
+        # Do we need to play next event? If not, skip this parameter value
+        if now >= next_start - latency_sec
+          # If it is too late to play this event, skip it
+          if now < next_start
             # Update state based on pattern value
             # TODO: Pass as parameter exact time: starts_at
             update_state(p, n_value)
@@ -170,8 +175,7 @@ module Xi
 
             # If a gate parameter changed, create a new sound object
             if p == @gate
-              n_end = n_start + n_dur
-              ends_at = @clock.init_ts + (n_end / cps)
+              next_end = next_start + n_dur
 
               # If these sounds objects are new,
               # consider them as new "gate on" events.
@@ -179,14 +183,17 @@ module Xi
                 new_so_ids = Array(n_value)
                   .size.times.map { new_sound_object_id }
 
-                gate_on << {so_ids: new_so_ids, at: starts_at}
+                gate_on << {so_ids: new_so_ids, at: next_start}
                 @playing_sound_objects[n_start] = {so_ids: new_so_ids}
               end
 
               # Set (or update) ends_at timestamp
-              @playing_sound_objects[n_start][:at] = ends_at
+              @playing_sound_objects[n_start][:at] = next_end
             end
           end
+
+          @prev_ts[p] = next_start
+          @prev_delta[p] = n_dur
 
           # Because we already processed event, advance enumerator
           enum.next
