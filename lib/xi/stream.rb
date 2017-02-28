@@ -168,6 +168,8 @@ module Xi
         if now >= next_start - latency_sec
           # If it is too late to play this event, skip it
           if now < next_start
+            starts_at = @clock.init_ts + next_start
+
             # Update state based on pattern value
             # TODO: Pass as parameter exact time: starts_at
             update_state(p, n_value)
@@ -175,20 +177,19 @@ module Xi
 
             # If a gate parameter changed, create a new sound object
             if p == @gate
-              next_end = next_start + n_dur
-
               # If these sounds objects are new,
               # consider them as new "gate on" events.
               unless @playing_sound_objects.key?(n_start)
                 new_so_ids = Array(n_value)
                   .size.times.map { new_sound_object_id }
 
-                gate_on << {so_ids: new_so_ids, at: next_start}
+                gate_on << {so_ids: new_so_ids, at: starts_at}
                 @playing_sound_objects[n_start] = {so_ids: new_so_ids}
               end
 
               # Set (or update) ends_at timestamp
-              @playing_sound_objects[n_start][:at] = next_end
+              ends_at = @clock.init_ts + next_start + (n_dur / cps)
+              @playing_sound_objects[n_start][:at] = ends_at
             end
           end
 
