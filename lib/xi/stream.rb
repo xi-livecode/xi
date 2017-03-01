@@ -25,7 +25,8 @@ module Xi
       @state = {}
       @changed_params = [].to_set
       @playing_sound_objects = {}
-      @prev_end = {}
+      @prev_ts = {}
+      @prev_delta = {}
 
       self.clock = clock
     end
@@ -84,6 +85,8 @@ module Xi
       @mutex.synchronize do
         @playing = false
         @state.clear
+        @prev_ts.clear
+        @prev_delta.clear
         @clock.unsubscribe(self)
       end
       self
@@ -151,9 +154,6 @@ module Xi
     def play_enums(now, cps)
       gate_on = []
 
-      @prev_ts ||= {}
-      @prev_delta ||= {}
-
       @enums.each do |p, enum|
         next unless enum.next?
 
@@ -193,7 +193,7 @@ module Xi
             end
           end
 
-          @prev_ts[p] = next_start
+          @prev_ts[p]    = next_start
           @prev_delta[p] = n_dur
 
           # Because we already processed event, advance enumerator
