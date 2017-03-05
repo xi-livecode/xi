@@ -188,7 +188,8 @@ module Xi
               end
 
               # Set (or update) ends_at timestamp
-              ends_at = @clock.init_ts + next_start + (n_dur / cps)
+              legato = @state[:legato] || 1
+              ends_at = @clock.init_ts + next_start + ((n_dur * legato) / cps)
               @playing_sound_objects[n_start][:at] = ends_at
             end
           end
