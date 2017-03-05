@@ -111,7 +111,8 @@ module Xi
     end
 
     def update_clock_from_server_data(h)
-      @init_ts = h[:ts].to_f
+      # Do not set @init_ts for now
+      #@init_ts = h[:ts].to_f
       @cps = h[:cps]
     end
   end
