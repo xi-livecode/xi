@@ -15,7 +15,7 @@ module Xi
       @cps = cps
       @playing = true
       @streams = [].to_set
-      @init_ts = Time.now.to_f
+      @init_ts = Time.now.to_i.to_f
       @latency = 0.0
       @play_thread = Thread.new { thread_routine }
     end
