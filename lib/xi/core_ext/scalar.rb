@@ -8,7 +8,12 @@ module Xi::CoreExt
   end
 end
 
-class Fixnum;   include Xi::CoreExt::Scalar; end
+if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
+  class Fixnum; include Xi::CoreExt::Scalar; end
+else
+  class Integer; include Xi::CoreExt::Scalar; end
+end
+
 class Float;    include Xi::CoreExt::Scalar; end
 class String;   include Xi::CoreExt::Scalar; end
 class Symbol;   include Xi::CoreExt::Scalar; end
