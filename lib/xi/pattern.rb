@@ -353,6 +353,11 @@ module Xi
       each_event(cycle).take(n)
     end
 
+    # @see #take
+    def peek(n=10, cycle=0)
+      take(n, cycle)
+    end
+
     # Returns the first +n+ values from +self+, starting from +cycle+.
     #
     # Only values are returned, start position and duration are ignored.
@@ -361,6 +366,11 @@ module Xi
     #
     def take_values(*args)
       take(*args).map(&:first)
+    end
+
+    # @see #take_values
+    def peek_values(n=10, *args)
+      take_values(n, *args)
     end
 
     # Returns the first element, or the first +n+ elements, of the pattern.
