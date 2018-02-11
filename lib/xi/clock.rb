@@ -36,6 +36,22 @@ module Xi
       @mutex.synchronize { @cps = new_cps.to_f }
     end
 
+    def bps
+      @mutex.synchronize { @cps * 2 }
+    end
+
+    def bps=(new_bps)
+      @mutex.synchronize { @cps = new_bps / 2.0 }
+    end
+
+    def bpm
+      @mutex.synchronize { @cps * 120 }
+    end
+
+    def bpm=(new_bpm)
+      @mutex.synchronize { @cps = new_bpm / 120.0 }
+    end
+
     def latency=(new_latency)
       @latency = new_latency.to_f
     end
