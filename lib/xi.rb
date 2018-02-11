@@ -41,8 +41,8 @@ module Xi
       pattern.peek(*args)
     end
 
-    def peek_values(pattern, *args)
-      pattern.peek_values(*args)
+    def peek_events(pattern, *args)
+      pattern.peek_events(*args)
     end
 
     def e(n, m, value=nil)

@@ -129,7 +129,7 @@ module Xi
       # @see #sin1 for the same function but constrained on 0 to 1 values
       #
       # @example
-      #   P.sin(8).map { |i| i.round(2) }
+      #   peek P.sin(8).map { |i| i.round(2) }
       #     #=> [0.0, 0.71, 1.0, 0.71, 0.0, -0.71, -1.0, -0.71]
       #
       # @example +quant+ determines the size, +delta+ the total duration
@@ -157,7 +157,7 @@ module Xi
       # @see #sin
       #
       # @example
-      #   P.sin1(8).map { |i| i.round(2) }
+      #   peek P.sin1(8).map { |i| i.round(2) }
       #     #=> [0.5, 0.85, 1.0, 0.85, 0.5, 0.15, 0.0, 0.15]
       #
       # @param quant [Fixnum]
