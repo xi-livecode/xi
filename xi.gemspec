@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{A musical pattern language inspired in Tidal and SuperCollider
                           for building higher-level musical constructs easily.}
   spec.homepage      = "https://github.com/xi-livecode/xi"
-  spec.license       = "MIT"
+  spec.license       = "GPL-3.0-or-later"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
