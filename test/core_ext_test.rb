@@ -21,8 +21,8 @@ describe '#p' do
     end
   end
 
-  describe Fixnum do
-    it 'creates a Pattern from a Fixnum' do
+  describe Integer do
+    it 'creates a Pattern from a Integer' do
       assert_pattern [42], 42.p
     end
   end
@@ -60,7 +60,7 @@ describe '#p' do
   end
 end
 
-describe Fixnum do
+describe Integer do
   describe '#/' do
     it 'divides number and casts it as a Rational' do
       assert_equal 1/2.to_r, 1/2

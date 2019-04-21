@@ -40,7 +40,7 @@ clap.set n: s("..x. xyz. .x.. .xyx", 60, 61, 60).p.decelerate(2),
 
 ### Quickstart
 
-You will need Ruby 2.1+ installed on your system.  Check by running `ruby
+You will need Ruby 2.4+ installed on your system.  Check by running `ruby
 -v`.  To install Xi you must install the core libraries and REPL, and then one
 or more backends.
 

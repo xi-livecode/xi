@@ -132,17 +132,17 @@ module Xi
       #   peek [1, 2, 3].p.seq(1, 1)        #=> [2, 3, 1]
       #   peek [1, 2, 3].p.seq(2, 2)        #=> [3, 2, 1, 3, 2, 1]
       #
-      # @param repeats [Fixnum] number (defaut: 1)
-      # @param offset [Fixnum] (default: 0)
+      # @param repeats [Integer] number (defaut: 1)
+      # @param offset [Integer] (default: 0)
       # @return [Pattern]
       #
       def seq(repeats=1, offset=0)
-        unless repeats.is_a?(Fixnum) && repeats >= 0
-          fail ArgumentError, "repeats must be a non-negative Fixnum"
+        unless repeats.is_a?(Integer) && repeats >= 0
+          fail ArgumentError, "repeats must be a non-negative Integer"
         end
 
-        unless offset.is_a?(Fixnum) && offset >= 0
-          fail ArgumentError, "offset must be a non-negative Fixnum"
+        unless offset.is_a?(Integer) && offset >= 0
+          fail ArgumentError, "offset must be a non-negative Integer"
         end
 
         Pattern.new(self, size: size * repeats) do |y|
@@ -362,7 +362,7 @@ module Xi
       #   peek [1, 2, 3].p.rand             #=> [2]
       #   peek [1, 2, 3, 4].p.rand(6)       #=> [1, 3, 2, 2, 4, 3]
       #
-      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @param repeats [Integer, Symbol] number or inf (default: 1)
       # @return [Pattern]
       #
       def rand(repeats=1)
@@ -378,7 +378,7 @@ module Xi
       #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
       #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
       #
-      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @param repeats [Integer, Symbol] number or inf (default: 1)
       # @return [Pattern]
       #
       def xrand(repeats=1)
@@ -394,7 +394,7 @@ module Xi
       #   peek [1, 2, 3, 4, 5].p.xrand    #=> [4]
       #   peek [1, 2, 3].p.xrand(8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
       #
-      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @param repeats [Integer, Symbol] number or inf (default: 1)
       # @return [Pattern]
       #
       def shuf(repeats=1)

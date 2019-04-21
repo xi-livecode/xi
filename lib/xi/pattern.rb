@@ -59,7 +59,7 @@ module Xi
     #   #     [3,  4, 1, 0]]
     #
     # @param source [Array]
-    # @param size [Fixnum] number of events per iteration
+    # @param size [Integer] number of events per iteration
     # @param delta [Numeric, Array<Numeric>, Pattern<Numeric>] event delta
     # @param metadata [Hash]
     # @yield [yielder, delta] yielder and event delta
@@ -345,7 +345,7 @@ module Xi
 
     # Returns the first +n+ events from the pattern, starting from +cycle+
     #
-    # @param n [Fixnum]
+    # @param n [Integer]
     # @param cycle [Numeric]
     # @return [Array] values
     #
@@ -380,7 +380,7 @@ module Xi
     #
     # @see #take
     #
-    # @param n [Fixnum]
+    # @param n [Integer]
     # @param args same arguments as {#take}
     # @return [Object, Array]
     #
@@ -420,7 +420,7 @@ module Xi
     # pattern size is assumed to be 1, so iteration size depends on delta
     # values.
     #
-    # @return [Fixnum]
+    # @return [Integer]
     #
     def iteration_size
       finite? ? delta_size.lcm(@size) : delta_size

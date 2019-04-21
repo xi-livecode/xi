@@ -21,14 +21,8 @@ module Xi::CoreExt
   end
 end
 
-if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
-  class Fixnum
-    include Xi::CoreExt::Numeric
-  end
-else
-  class Integer
-    include Xi::CoreExt::Numeric
-  end
+class Integer
+  include Xi::CoreExt::Numeric
 end
 
 class Float

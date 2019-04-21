@@ -61,7 +61,7 @@ module Xi
       #   peek P.rand([1, 2, 3, 4], 6)    #=> [1, 3, 2, 2, 4, 3]
       #
       # @param list [#each] list of values
-      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @param repeats [Integer, Symbol] number or inf (default: 1)
       # @return [Pattern]
       #
       def rand(list, repeats=1)
@@ -83,7 +83,7 @@ module Xi
       #   peek P.xrand([1, 2, 3], 8)       #=> [1, 3, 2, 3, 1, 2, 3, 2]
       #
       # @param list [#each] list of values
-      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @param repeats [Integer, Symbol] number or inf (default: 1)
       # @return [Pattern]
       #
       def xrand(list, repeats=1)
@@ -109,7 +109,7 @@ module Xi
       #   peek P.shuf([1, 2, 3], 3)       #=> [2, 3, 1, 2, 3, 1, 2, 3, 1]
       #
       # @param list [#each] list of values
-      # @param repeats [Fixnum, Symbol] number or inf (default: 1)
+      # @param repeats [Integer, Symbol] number or inf (default: 1)
       # @return [Pattern]
       #
       def shuf(list, repeats=1)
@@ -137,8 +137,8 @@ module Xi
       #   P.sin(22).duration      #=> (1/1)
       #   P.sin(19, 2).duration   #=> (2/1)
       #
-      # @param quant [Fixnum]
-      # @param delta [Fixnum] (default: 1)
+      # @param quant [Integer]
+      # @param delta [Integer] (default: 1)
       # @return [Pattern]
       #
       def sin(quant, delta=1)
@@ -160,8 +160,8 @@ module Xi
       #   peek P.sin1(8).map { |i| i.round(2) }
       #     #=> [0.5, 0.85, 1.0, 0.85, 0.5, 0.15, 0.0, 0.15]
       #
-      # @param quant [Fixnum]
-      # @param delta [Fixnum] (default: 1)
+      # @param quant [Integer]
+      # @param delta [Integer] (default: 1)
       # @return [Pattern]
       #
       def sin1(quant, delta=1)
