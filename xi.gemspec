@@ -30,4 +30,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "guard-minitest"
 
   spec.add_dependency 'pry'
+  spec.add_dependency 'osc-ruby'
 end
