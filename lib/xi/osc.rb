@@ -1,4 +1,3 @@
-require "xi/osc/version"
 require 'osc-ruby'
 
 module Xi
