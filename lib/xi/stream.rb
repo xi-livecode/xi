@@ -279,6 +279,7 @@ module Xi
         n_value, _ = enum.peek
         update_state(p, n_value)
       end
+      transform_state
       @reset = false
     end
 
