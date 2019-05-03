@@ -1,4 +1,8 @@
+require 'forwardable'
+
 class Xi::Scale
+  extend Forwardable
+
   DEGREES = {
     # TWELVE TONES PER OCTAVE
     # 5 note scales
@@ -91,7 +95,23 @@ class Xi::Scale
 
   class << self
     DEGREES.each do |name, list|
-      define_method(name) { list }
+      define_method(name) { self.new(list) }
     end
   end
+
+  attr_reader :notes
+
+  def initialize(notes)
+    @notes = notes
+  end
+
+  def_delegators :@notes, :size, :[], :to_a, :first
+
+  def p(*delta, **metadata)
+    [@notes].p(*delta, **metadata)
+  end
+
+  #def size
+    #@notes.size
+  #end
 end
