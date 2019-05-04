@@ -14,7 +14,7 @@ multiple known bugs, missing features, documentation and tests.
 ## Example
 
 ```ruby
-melody = [1,4,7,8,9]
+melody = [0,3,6,7,8]
 scale = [Scale.iwato, Scale.jiao]
 
 fm.set degree: melody.p(1/2,1/8,1/8,1/8,1/16,1/8,1/8).seq(2),

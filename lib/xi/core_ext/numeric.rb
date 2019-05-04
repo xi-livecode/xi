@@ -10,8 +10,8 @@ module Xi::CoreExt
 
     def degree_to_key(scale, steps_per_octave)
       accidental = (self - self.to_i) * 10.0
-      inner_key = scale[(self - 1) % scale.size]
-      base_key = ((self - 1) / scale.size).to_i * steps_per_octave + inner_key
+      inner_key = scale[self % scale.size]
+      base_key = (self / scale.size).to_i * steps_per_octave + inner_key
       if accidental != 0
         base_key + accidental * (steps_per_octave / 12.0)
       else
