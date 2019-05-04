@@ -259,36 +259,36 @@ module Xi
       # Slows down a pattern by stretching start and duration of events
       # +num+ times.
       #
-      # It is the inverse operation of #accelerate
+      # It is the inverse operation of #fast
       #
-      # @see #accelerate
+      # @see #fast
       #
       # @example
-      #   peek_events %w(a b c d).p([1/4, 1/8, 1/6]).decelerate(2)
+      #   peek_events %w(a b c d).p([1/4, 1/8, 1/6]).slow(2)
       #     #=> [E["a",0,1/2], E["b",1/2,1/4], E["c",3/4,1/3], E["d",13/12,1/2]]
       #
       # @param num [Numeric]
       # @return [Pattern]
       #
-      def decelerate(num)
+      def slow(num)
         Pattern.new(self, delta: delta.p * num)
       end
 
       # Advance a pattern by shrinking start and duration of events
       # +num+ times.
       #
-      # It is the inverse operation of #decelerate
+      # It is the inverse operation of #slow
       #
-      # @see #decelerate
+      # @see #slow
       #
       # @example
-      #   peek_events %w(a b c d).p([1/2, 1/4]).accelerate(2)
+      #   peek_events %w(a b c d).p([1/2, 1/4]).fast(2)
       #     #=> [E["a",0,1/4], E["b",1/4,1/8], E["c",3/8,1/4], E["d",5/8,1/8]]
       #
       # @param num [Numeric]
       # @return [Pattern]
       #
-      def accelerate(num)
+      def fast(num)
         Pattern.new(self, delta: delta.p / num)
       end
 

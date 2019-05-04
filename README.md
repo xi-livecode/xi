@@ -28,7 +28,7 @@ fm.set degree: melody.p(1/2,1/8,1/8,1/8,1/16,1/8,1/8).seq(2),
 
 kick.set freq: s("xi.x .ix. | xi.x xx.x", 70, 200), amp: 0.8, gate: :freq
 
-clap.set n: s("..x. xyz. .x.. .xyx", 60, 61, 60).p.decelerate(2),
+clap.set n: s("..x. xyz. .x.. .xyx", 60, 61, 60).p.slow(2),
          gate: :n,
          amp: 0.35,
          pan: P.sin(16, 2) * 0.6,
