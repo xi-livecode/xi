@@ -219,6 +219,7 @@ module Xi
       def normalize(min, max)
         map { |v| v.respond_to?(:-) ? (v - min) / (max - min) : v }
       end
+      alias_method :norm, :normalize
 
       # Scales a pattern of normalized values (0..1) to a custom range
       # +min+..+max+
@@ -239,6 +240,7 @@ module Xi
       def denormalize(min, max)
         map { |v| v.respond_to?(:*) ? (max - min) * v + min : v }
       end
+      alias_method :denorm, :denormalize
 
       # Scale from one range of values to another range of values
       #
