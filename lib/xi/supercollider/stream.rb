@@ -22,10 +22,6 @@ module Xi::Supercollider
       at_exit { free_playing_synths }
     end
 
-    def set(params)
-      super(gate: params[:gate] || :freq, **params)
-    end
-
     def stop
       @mutex.synchronize do
         @playing_synths.each do |so_id|

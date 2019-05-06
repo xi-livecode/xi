@@ -34,7 +34,7 @@ module Xi
     def set(delta: nil, gate: nil, **source)
       @mutex.synchronize do
         @source = source
-        @gate = gate if gate
+        @gate = gate || parameter_with_smallest_delta(source)
         @delta = delta if delta
         @reset = true unless @playing
         update_internal_structures
@@ -281,6 +281,10 @@ module Xi
       end
       transform_state
       @reset = false
+    end
+
+    def parameter_with_smallest_delta(source)
+      source.min_by { |param, enum| enum.p.delta }.first
     end
 
     def latency_sec
