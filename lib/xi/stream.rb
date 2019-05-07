@@ -285,7 +285,10 @@ module Xi
     end
 
     def parameter_with_smallest_delta(source)
-      source.min_by { |param, enum| enum.p.delta }.first
+      source.min_by { |param, enum|
+        delta = enum.p.delta
+        delta.is_a?(Array) ? delta.min : delta
+      }.first
     end
 
     def remove_parameters_from_prev_source(new_source)
