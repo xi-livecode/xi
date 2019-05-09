@@ -147,6 +147,32 @@ module Xi
         end
       end
 
+      # Generates values from a sawtooth waveform discretized to +quant+ events
+      # for the duration of +delta+ cycles
+      #
+      # Values range from 0 to 1
+      #
+      # @example
+      #   peek P.saw(8)
+      #     #=> [(0/1), (1/8), (1/4), (3/8), (1/2), (5/8), (3/4), (7/8), (0/1), (1/8)]
+      #
+      # @example +quant+ determines the size, +delta+ the total duration
+      #   P.saw(8).size           #=> 8
+      #   P.saw(22).duration      #=> (1/1)
+      #   P.saw(19, 2).duration   #=> (2/1)
+      #
+      # @param quant [Integer]
+      # @param delta [Integer] (default: 1)
+      # @return [Pattern]
+      #
+      def saw(quant, delta=1)
+        Pattern.new(size: quant, delta: delta / quant) do |y|
+          quant.times do |i|
+            y << i / quant
+          end
+        end
+      end
+
       private
 
       # @private
