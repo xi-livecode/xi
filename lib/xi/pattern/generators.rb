@@ -124,13 +124,11 @@ module Xi
       # Generates values from a sinewave discretized to +quant+ events
       # for the duration of +delta+ cycles.
       #
-      # Values range from -1 to 1
-      #
-      # @see #sin1 for the same function but constrained on 0 to 1 values
+      # Values range from 0 to 1
       #
       # @example
       #   peek P.sin(8).map { |i| i.round(2) }
-      #     #=> [0.0, 0.71, 1.0, 0.71, 0.0, -0.71, -1.0, -0.71]
+      #     #=> [0.5, 0.85, 1.0, 0.85, 0.5, 0.15, 0.0, 0.15, 0.5, 0.85]
       #
       # @example +quant+ determines the size, +delta+ the total duration
       #   P.sin(8).size           #=> 8
@@ -144,28 +142,9 @@ module Xi
       def sin(quant, delta=1)
         Pattern.new(size: quant, delta: delta / quant) do |y|
           quant.times do |i|
-            y << Math.sin(i / quant * 2 * Math::PI)
+            y << (Math.sin(i / quant * 2 * Math::PI) + 1) / 2
           end
         end
-      end
-
-      # Generates values from a sinewave discretized to +quant+ events
-      # for the duration of +delta+ cycles.
-      #
-      # Values range from 0 to 1
-      #
-      # @see #sin
-      #
-      # @example
-      #   peek P.sin1(8).map { |i| i.round(2) }
-      #     #=> [0.5, 0.85, 1.0, 0.85, 0.5, 0.15, 0.0, 0.15]
-      #
-      # @param quant [Integer]
-      # @param delta [Integer] (default: 1)
-      # @return [Pattern]
-      #
-      def sin1(quant, delta=1)
-        sin(quant, delta).scale(-1, 1, 0, 1)
       end
 
       private
