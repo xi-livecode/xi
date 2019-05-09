@@ -192,6 +192,35 @@ module Xi
         -P.saw(*args) + 1
       end
 
+      # Generates a triangle waveform, discretized to +quant+ events for the
+      # duration of +delta+ cycles
+      #
+      # Values range from 0 to 1
+      #
+      # @example
+      #   peek P.tri(8)
+      #     #=> [(0/1), (1/4), (1/2), (3/4), (1/1), (3/4), (1/2), (1/4), (0/1), (1/4)]
+      #
+      # @param quant [Integer]
+      # @param delta [Integer] (default: 1)
+      # @return [Pattern]
+      #
+      def tri(quant, delta=1)
+        Pattern.new(size: quant, delta: delta / quant) do |y|
+          half_quant = quant / 2
+          up_half = half_quant.to_f.ceil
+          down_half = quant - up_half
+
+          up_half.times do |i|
+            y << i / half_quant
+          end
+          down_half.times do |i|
+            j = down_half - i
+            y << j / half_quant
+          end
+        end
+      end
+
       private
 
       # @private
