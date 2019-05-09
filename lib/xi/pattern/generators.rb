@@ -147,7 +147,7 @@ module Xi
         end
       end
 
-      # Generates values from a sawtooth waveform discretized to +quant+ events
+      # Generates values from a sawtooth waveform, discretized to +quant+ events
       # for the duration of +delta+ cycles
       #
       # Values range from 0 to 1
@@ -171,6 +171,25 @@ module Xi
             y << i / quant
           end
         end
+      end
+
+      # Generates an inverse sawtooth waveform, discretized to +quant+ events
+      # for the duration of +delta+ cycles
+      #
+      # Values range from 0 to 1
+      #
+      # @see P.saw
+      #
+      # @example
+      #   peek P.isaw(8)
+      #     #=> [(1/1), (7/8), (3/4), (5/8), (1/2), (3/8), (1/4), (1/8), (1/1), (7/8)]
+      #
+      # @param quant [Integer]
+      # @param delta [Integer] (default: 1)
+      # @return [Pattern]
+      #
+      def isaw(*args)
+        -P.saw(*args) + 1
       end
 
       private
