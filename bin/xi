@@ -4,7 +4,7 @@ require "xi/repl"
 
 include Xi
 
-if ARGV.index('--irb') >= 0
+if ARGV.index('--irb')
   ARGV.delete('--irb')
   REPL.start(irb: true)
 else
