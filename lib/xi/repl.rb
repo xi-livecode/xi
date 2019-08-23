@@ -1,3 +1,4 @@
+require "irb"
 require "pry"
 require 'io/console'
 require "xi/error_log"
